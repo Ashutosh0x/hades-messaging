@@ -119,7 +119,7 @@ jobs:
       - name: Cargo audit
         run: cargo audit --deny warnings
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -167,7 +167,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: android-${{ matrix.target.abi }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
