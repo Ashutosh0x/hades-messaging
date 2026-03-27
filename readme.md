@@ -1,5 +1,8 @@
 # Hades Messaging
 
+<img width="2816" height="1536" alt="hades messaging" src="https://github.com/user-attachments/assets/f3d85097-6950-4edf-9aac-41ebc1d81463" />
+
+
 [![CI](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml)
 [![Security Audit](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml)
 [![CodeQL](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml)
