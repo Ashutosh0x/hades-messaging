@@ -1,0 +1,17 @@
+[package]
+name = "hades-common"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared types, errors, and constants for Hades Messaging"
+
+[dependencies]
+ulid = { workspace = true }
+blake3 = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+zeroize = { workspace = true }
+rand = { workspace = true }
+getrandom = { workspace = true }

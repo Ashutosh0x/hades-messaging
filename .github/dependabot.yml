@@ -1,0 +1,240 @@
+# =============================================================================
+# Hades Messaging — Dependabot Configuration
+# Automated dependency updates for all ecosystems
+# =============================================================================
+version: 2
+
+registries: {}
+
+updates:
+  # ───────────────────────────────────────────────────────────────────────────
+  # GitHub Actions — Pin and update all action versions
+  # ───────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Ashutosh0x"
+    labels:
+      - "dependencies"
+      - "ci"
+      - "automated"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Rust (Cargo) — Cryptographic and core dependencies
+  # ───────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 15
+    reviewers:
+      - "Ashutosh0x"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "security-review-required"
+    commit-message:
+      prefix: "deps(rust)"
+      include: "scope"
+    groups:
+      crypto-primitives:
+        patterns:
+          - "chacha20poly1305"
+          - "x25519-dalek"
+          - "ed25519-dalek"
+          - "curve25519-dalek"
+          - "blake3"
+          - "hkdf"
+          - "sha2"
+          - "argon2"
+          - "pqcrypto*"
+          - "ml-kem"
+          - "zeroize"
+          - "rand"
+          - "rand_core"
+          - "rand_chacha"
+        update-types:
+          - "minor"
+          - "patch"
+      networking:
+        patterns:
+          - "arti*"
+          - "tor-*"
+          - "tokio"
+          - "tokio-*"
+          - "hyper"
+          - "hyper-*"
+          - "tungstenite"
+          - "reqwest"
+        update-types:
+          - "minor"
+          - "patch"
+      storage:
+        patterns:
+          - "rusqlite"
+          - "sqlcipher"
+          - "sled"
+          - "scylla*"
+        update-types:
+          - "minor"
+          - "patch"
+      tauri:
+        patterns:
+          - "tauri"
+          - "tauri-*"
+        update-types:
+          - "minor"
+          - "patch"
+      serde-ecosystem:
+        patterns:
+          - "serde"
+          - "serde_*"
+          - "bincode"
+          - "prost"
+          - "prost-*"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "chacha20poly1305"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "x25519-dalek"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ed25519-dalek"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "arti*"
+        update-types: ["version-update:semver-major"]
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # npm — Frontend (React/TypeScript/Vite)
+  # ───────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 15
+    reviewers:
+      - "Ashutosh0x"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "javascript"
+    commit-message:
+      prefix: "deps(npm)"
+      include: "scope"
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router*"
+          - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
+      build-tooling:
+        patterns:
+          - "vite"
+          - "vite-*"
+          - "@vitejs/*"
+          - "typescript"
+          - "esbuild"
+          - "postcss*"
+          - "autoprefixer"
+        update-types:
+          - "minor"
+          - "patch"
+      ui-libraries:
+        patterns:
+          - "framer-motion"
+          - "zustand"
+          - "lucide-react"
+          - "clsx"
+          - "class-variance-authority"
+        update-types:
+          - "minor"
+          - "patch"
+      i18n:
+        patterns:
+          - "i18next"
+          - "react-i18next"
+          - "i18next-*"
+        update-types:
+          - "minor"
+          - "patch"
+      linting:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "prettier"
+          - "@typescript-eslint/*"
+        update-types:
+          - "minor"
+          - "patch"
+      testing:
+        patterns:
+          - "vitest"
+          - "@testing-library/*"
+          - "jsdom"
+          - "happy-dom"
+          - "playwright*"
+          - "@playwright/*"
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Tauri config (npm in root for tauri-cli)
+  # ───────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "08:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Ashutosh0x"
+    labels:
+      - "dependencies"
+      - "tauri"
+    commit-message:
+      prefix: "deps(tauri)"
+      include: "scope"

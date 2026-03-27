@@ -1,0 +1,268 @@
+.security-screen {
+  min-height: 100dvh;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.security-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+}
+
+.security-title {
+  flex: 1;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-widest);
+}
+
+.security-tabs {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.sec-tab {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  font-family: var(--font-family);
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.sec-tab.active {
+  background: var(--accent-secure-dim);
+  border-color: var(--accent-secure);
+  color: var(--accent-secure);
+}
+
+.security-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-10);
+}
+
+/* ── Security Cards ── */
+.sec-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sec-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.sec-card-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sec-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+.verification-badge {
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  color: var(--accent-warning);
+  background: var(--accent-warning-dim);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: var(--tracking-wide);
+}
+
+.verification-card {
+  border-color: rgba(243, 156, 18, 0.3);
+}
+
+/* ── Notification Privacy ── */
+.push-notification-btn {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--accent-secure);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.push-notification-btn:hover {
+  background: var(--accent-secure-hover);
+}
+
+.notif-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notif-option { width: 100%; }
+
+.notif-preview {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.notif-preview.selected {
+  border-color: var(--accent-secure);
+  background: var(--accent-secure-dim);
+}
+
+.notif-preview-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  display: block;
+}
+
+.notif-preview-tag {
+  font-size: var(--text-xs);
+  color: var(--accent-secure);
+  display: block;
+  margin-top: 2px;
+}
+
+.notif-preview-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── Crypto Details ── */
+.crypto-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.crypto-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crypto-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-widest);
+  font-weight: var(--font-medium);
+}
+
+.crypto-value {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  background: var(--bg-surface);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  word-break: break-all;
+}
+
+/* ── Fingerprint Grid ── */
+.fingerprint-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+
+.fingerprint-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.fp-index {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  width: 20px;
+  font-family: monospace;
+}
+
+.fp-values {
+  display: flex;
+  gap: var(--space-6);
+  flex: 1;
+}
+
+.fp-value {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  font-family: 'SF Mono', 'Fira Code', 'Inter', monospace;
+  color: var(--accent-secure);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ── Verify Button ── */
+.verify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--accent-secure);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background var(--duration-fast), transform var(--duration-fast) var(--ease-bounce);
+  animation: securePulse 2s ease-in-out infinite;
+}
+
+.verify-btn:hover {
+  background: var(--accent-secure-hover);
+}
+
+.verify-btn:active {
+  transform: scale(0.98);
+}
+
+.verify-btn svg {
+  stroke: var(--text-inverse);
+}

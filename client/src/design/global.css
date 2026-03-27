@@ -1,0 +1,163 @@
+@import './tokens.css';
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+  overflow-x: hidden;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.message-content {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#root {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--duration-normal);
+  animation-timing-function: var(--ease-out);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-full); }
+
+:focus-visible {
+  outline: 2px solid var(--accent-secure);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Animations ── */
+
+@keyframes lockSlideUp {
+  from { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes messageSlideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes sendPulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+@keyframes pinShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-10px); }
+  75%      { transform: translateX(10px); }
+}
+
+@keyframes securePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes vaultProgress {
+  0%   { width: 0%; }
+  30%  { width: 30%; }
+  60%  { width: 60%; }
+  80%  { width: 80%; }
+  100% { width: 100%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes matrixRain {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+@keyframes ringPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.5); }
+  70%  { box-shadow: 0 0 0 20px rgba(46, 204, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+@keyframes ringPulseRed {
+  0%   { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.5); }
+  70%  { box-shadow: 0 0 0 20px rgba(231, 76, 60, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+@keyframes callingDots {
+  0%, 20%  { content: '.'; }
+  40%      { content: '..'; }
+  60%, 80% { content: '...'; }
+}
+
+@keyframes audioBar {
+  0%, 100% { height: 4px; }
+  50%      { height: var(--bar-h, 24px); }
+}
+
+@keyframes avatarGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.3), 0 0 40px rgba(46, 204, 113, 0.1); }
+  50%      { box-shadow: 0 0 0 12px rgba(46, 204, 113, 0), 0 0 60px rgba(46, 204, 113, 0.2); }
+}
+
+@keyframes slideInSheet {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

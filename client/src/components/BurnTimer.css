@@ -1,0 +1,16 @@
+.burn-timer-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+.burn-timer-svg {
+  display: block;
+}
+
+.burn-timer-svg circle {
+  transition: stroke var(--duration-fast);
+}

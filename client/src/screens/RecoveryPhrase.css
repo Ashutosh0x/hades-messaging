@@ -1,0 +1,304 @@
+/* ═══════════════════════════════════════════════════════════════
+   RecoveryPhrase — BIP-39 "Seed Phrase" vault UI
+   ═══════════════════════════════════════════════════════════════ */
+
+.recovery-screen {
+  background: var(--bg-base);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.rp-back { background: none; border: none; cursor: pointer; padding: 4px; }
+
+.rp-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.rp-content {
+  flex: 1;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+/* ── Warning ── */
+
+.rp-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(243, 156, 18, 0.08);
+  border: 1px solid rgba(243, 156, 18, 0.25);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+}
+
+.rp-warning p {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Word Grid ── */
+
+.rp-word-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  position: relative;
+  margin-bottom: var(--space-5);
+}
+
+.rp-word-grid.blurred .rp-word-card {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.rp-word-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: filter 0.3s;
+}
+
+.rp-word-num {
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  color: var(--text-muted);
+  min-width: 18px;
+  text-align: right;
+}
+
+.rp-word-text {
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: var(--text-sm);
+  color: var(--accent-secure);
+  font-weight: var(--font-medium);
+}
+
+/* ── Blur Overlay ── */
+
+.rp-blur-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  z-index: 2;
+}
+
+.rp-blur-overlay p {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.rp-reveal-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rp-reveal-btn:hover { background: var(--bg-surface); }
+
+/* ── Actions ── */
+
+.rp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rp-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rp-copy-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+
+.rp-continue-btn {
+  height: 52px;
+  background: var(--accent-secure);
+  border: none;
+  border-radius: var(--radius-xl);
+  color: var(--bg-base);
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+}
+
+/* ── Quiz ── */
+
+.rp-quiz {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.rp-quiz-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.rp-quiz-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+.rp-quiz-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.rp-quiz-field label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.rp-quiz-field input {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-3);
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: var(--text-base);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.rp-quiz-field input:focus { border-color: var(--accent-secure); }
+.rp-quiz-field.error input { border-color: var(--danger); }
+
+.rp-quiz-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+
+.rp-verify-btn {
+  width: 100%;
+  height: 52px;
+  background: var(--accent-secure);
+  border: none;
+  border-radius: var(--radius-xl);
+  color: var(--bg-base);
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+}
+
+.rp-verify-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Confirmed ── */
+
+.rp-confirmed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 50vh;
+  gap: var(--space-4);
+}
+
+.rp-check-circle {
+  width: 96px;
+  height: 96px;
+  background: rgba(46, 204, 113, 0.1);
+  border: 2px solid var(--accent-secure);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.rp-confirmed h2 {
+  font-size: var(--text-xl);
+  color: var(--accent-secure);
+  margin: 0;
+}
+
+.rp-confirmed p {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  max-width: 280px;
+}
+
+.rp-done-btn {
+  margin-top: var(--space-4);
+  width: 200px;
+  height: 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 360px) {
+  .rp-word-grid { grid-template-columns: repeat(2, 1fr); }
+}

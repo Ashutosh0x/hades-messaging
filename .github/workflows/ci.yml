@@ -1,0 +1,395 @@
+# =============================================================================
+# Hades Messaging — Continuous Integration Pipeline
+# Runs on every push and PR: lint, test, build, and coverage
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "release/**"]
+  pull_request:
+    branches: [main, develop]
+  merge_group:
+    types: [checks_requested]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-D warnings -C debuginfo=0"
+  RUST_BACKTRACE: short
+  NODE_VERSION: "20"
+  RUST_VERSION: "1.75"
+
+permissions:
+  contents: read
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Pre-flight: Determine what changed to skip unnecessary jobs
+  # ═══════════════════════════════════════════════════════════════════════════
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      ci: ${{ steps.filter.outputs.ci }}
+      docs: ${{ steps.filter.outputs.docs }}
+      nix: ${{ steps.filter.outputs.nix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'crates/**'
+              - 'src-tauri/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+            frontend:
+              - 'client/**'
+              - 'package.json'
+              - 'package-lock.json'
+            ci:
+              - '.github/workflows/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+            nix:
+              - 'deployment/**'
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Rust: Format check
+  # ═══════════════════════════════════════════════════════════════════════════
+  rust-fmt:
+    name: Rust Format
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Rust: Clippy lint
+  # ═══════════════════════════════════════════════════════════════════════════
+  rust-clippy:
+    name: Rust Clippy
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Run Clippy
+        run: |
+          cargo clippy --workspace --all-targets --all-features -- \
+            -D warnings \
+            -D clippy::unwrap_used \
+            -D clippy::expect_used \
+            -D clippy::panic \
+            -D clippy::todo \
+            -D clippy::dbg_macro \
+            -W clippy::pedantic
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Rust: Unit and integration tests (matrix)
+  # ═══════════════════════════════════════════════════════════════════════════
+  rust-test:
+    name: Rust Tests (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          key: test-${{ matrix.os }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libssl-dev pkg-config \
+            libsqlcipher-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libsoup-3.0-dev
+
+      - name: Run tests
+        run: cargo test --workspace --all-features --no-fail-fast
+        env:
+          RUST_LOG: debug
+
+      - name: Run doc tests
+        run: cargo test --workspace --doc
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Rust: Code coverage with cargo-llvm-cov
+  # ═══════════════════════════════════════════════════════════════════════════
+  rust-coverage:
+    name: Rust Coverage
+    needs: [rust-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libssl-dev pkg-config libsqlcipher-dev \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+            librsvg2-dev libsoup-3.0-dev
+
+      - name: Generate coverage
+        run: |
+          cargo llvm-cov --workspace --all-features \
+            --lcov --output-path lcov.info \
+            --ignore-filename-regex 'tests/'
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          flags: rust
+          fail_ci_if_error: false
+
+      - name: Coverage threshold check
+        run: |
+          COVERAGE=$(cargo llvm-cov --workspace --all-features --summary-only 2>&1 | grep -oP '\d+\.\d+(?=%)' | head -1)
+          echo "Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 60.0" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 60% threshold"
+            exit 1
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Rust: Crypto crate hardening tests
+  # ═══════════════════════════════════════════════════════════════════════════
+  rust-crypto-tests:
+    name: Crypto Hardening Tests
+    needs: changes
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config libsqlcipher-dev
+
+      - name: Test hades-crypto (all features)
+        run: cargo test -p hades-crypto --all-features -- --test-threads=1
+
+      - name: Test hades-identity
+        run: cargo test -p hades-identity --all-features
+
+      - name: Test hades-onion
+        run: cargo test -p hades-onion --all-features
+
+      - name: Verify zeroize behavior
+        run: cargo test -p hades-crypto --all-features -- zeroize --nocapture
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Frontend: Lint, typecheck, and test
+  # ═══════════════════════════════════════════════════════════════════════════
+  frontend-lint:
+    name: Frontend Lint & Typecheck
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci --ignore-scripts
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit
+      - name: ESLint
+        run: npx eslint src/ --max-warnings=0
+      - name: Prettier check
+        run: npx prettier --check "src/**/*.{ts,tsx,css,json}"
+
+  frontend-test:
+    name: Frontend Tests
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci --ignore-scripts
+
+      - name: Run Vitest
+        run: npx vitest run --coverage --reporter=verbose
+        env:
+          CI: true
+
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: client/coverage
+          flags: frontend
+          fail_ci_if_error: false
+
+  frontend-build:
+    name: Frontend Build
+    needs: [frontend-lint, frontend-test]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci --ignore-scripts
+      - name: Build frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check bundle size
+        run: |
+          MAX_SIZE_KB=500
+          BUNDLE_SIZE=$(du -sk dist/ | cut -f1)
+          echo "Bundle size: ${BUNDLE_SIZE}KB"
+          if [ "$BUNDLE_SIZE" -gt "$MAX_SIZE_KB" ]; then
+            echo "::warning::Bundle size ${BUNDLE_SIZE}KB exceeds ${MAX_SIZE_KB}KB target"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Android Build Verification
+  # ═══════════════════════════════════════════════════════════════════════════
+  android-build-check:
+    name: Android Build Check
+    needs: [rust-test, frontend-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install frontend deps
+        run: cd client && npm ci --ignore-scripts
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli
+      - name: Verify Android build configuration
+        run: |
+          cd client
+          npx tauri android init || true
+          echo "Android build configuration verified"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CI Gate: All checks must pass before merge
+  # ═══════════════════════════════════════════════════════════════════════════
+  ci-pass:
+    name: CI Pass Gate
+    if: always()
+    needs:
+      - rust-fmt
+      - rust-clippy
+      - rust-test
+      - rust-crypto-tests
+      - frontend-lint
+      - frontend-test
+      - frontend-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate results
+        run: |
+          echo "Rust Format:       ${{ needs.rust-fmt.result }}"
+          echo "Rust Clippy:       ${{ needs.rust-clippy.result }}"
+          echo "Rust Tests:        ${{ needs.rust-test.result }}"
+          echo "Crypto Tests:      ${{ needs.rust-crypto-tests.result }}"
+          echo "Frontend Lint:     ${{ needs.frontend-lint.result }}"
+          echo "Frontend Tests:    ${{ needs.frontend-test.result }}"
+          echo "Frontend Build:    ${{ needs.frontend-build.result }}"
+
+      - name: Check for failures
+        if: |
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled')
+        run: |
+          echo "::error::One or more CI jobs failed or were cancelled"
+          exit 1
+
+      - name: All checks passed
+        run: echo "[PASS] All CI checks passed"

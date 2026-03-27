@@ -1,0 +1,14 @@
+{
+  "chatList": {
+    "appTitle": "LA SENTINELLE",
+    "searchPlaceholder": "Rechercher des coffres sécurisés...",
+    "navChats": "Discussions",
+    "navCalls": "Appels",
+    "navContacts": "Contacts",
+    "navSettings": "Paramètres"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue"
+  }
+}

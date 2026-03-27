@@ -1,0 +1,44 @@
+[package]
+name = "hades-relay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Relay server for Hades Messaging — message routing, prekey store, rate limiting"
+
+[dependencies]
+hades-common = { path = "../hades-common" }
+hades-proto = { path = "../hades-proto" }
+
+# Server
+axum = { workspace = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# Storage
+rusqlite = { workspace = true }
+
+# Security
+ed25519-dalek = { workspace = true }
+blake3 = { workspace = true }
+
+# Rate limiting
+governor = { workspace = true }
+dashmap = { workspace = true }
+
+# Observability
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+prometheus = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+prost = { workspace = true }
+
+# Utilities
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+bytes = { workspace = true }
+base64 = { workspace = true }

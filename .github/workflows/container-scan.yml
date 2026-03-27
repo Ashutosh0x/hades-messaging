@@ -1,0 +1,68 @@
+# =============================================================================
+# Hades Messaging — Container & Binary Scanning
+# Trivy scanning for relay server container images
+# =============================================================================
+name: Container Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/hades-relay/**"
+      - "Dockerfile*"
+      - ".github/workflows/container-scan.yml"
+  pull_request:
+    paths:
+      - "crates/hades-relay/**"
+      - "Dockerfile*"
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  trivy-fs:
+    name: Filesystem Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs.sarif"
+          severity: "HIGH,CRITICAL"
+          skip-dirs: "gen,target,node_modules,.git"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-fs.sarif"
+          category: "trivy-filesystem"
+
+  trivy-config:
+    name: Config Scan (IaC)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy (config)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-config.sarif"
+          severity: "HIGH,CRITICAL"
+          skip-dirs: "gen,target,node_modules"
+
+      - name: Upload Trivy Config SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: "trivy-config.sarif"
+          category: "trivy-config"

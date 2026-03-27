@@ -1,0 +1,81 @@
+.voice-recorder-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 var(--space-2);
+  height: 48px;
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-full);
+}
+
+.recorder-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 60px;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: pulse 1.5s infinite;
+}
+
+.duration {
+  font-family: monospace;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.waveform-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
+  flex: 1;
+  padding: 0 var(--space-4);
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.waveform-bar {
+  width: 3px;
+  background: var(--accent-secure);
+  border-radius: 2px;
+}
+
+.slide-to-cancel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+
+.mic-btn.recording {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-secure);
+  color: var(--bg-base);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+  cursor: grab;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.mic-btn.recording:active {
+  cursor: grabbing;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}

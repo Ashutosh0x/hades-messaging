@@ -1,0 +1,151 @@
+/* ═══════════════════════════════════════════════════════════════
+   SecureRouteIndicator — connection establishment HUD
+   ═══════════════════════════════════════════════════════════════ */
+
+.secure-route-indicator {
+  overflow: hidden;
+  z-index: var(--z-sticky);
+}
+
+.secure-route-indicator.state-connecting {
+  background: rgba(17, 24, 39, 0.95);
+}
+
+.secure-route-indicator.state-connected {
+  background: rgba(5, 46, 22, 0.6);
+}
+
+.secure-route-indicator.state-error {
+  background: rgba(60, 15, 15, 0.8);
+}
+
+.sri-content {
+  padding: 10px 16px 8px;
+}
+
+/* ── Status Row ── */
+.sri-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.sri-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sri-right {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Pulsing Dot ── */
+.sri-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sri-dot.dot-green {
+  background: var(--accent-secure);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+}
+
+.sri-dot.dot-amber {
+  background: var(--accent-warning);
+}
+
+.sri-dot.dot-red {
+  background: var(--danger);
+}
+
+/* ── Labels ── */
+.sri-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.state-connected .sri-label {
+  color: var(--accent-secure);
+}
+
+.state-error .sri-label {
+  color: var(--danger);
+}
+
+.sri-percent {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.sri-check {
+  font-size: 16px;
+  color: var(--accent-secure);
+  font-weight: 700;
+}
+
+/* ── Progress Bar ── */
+.sri-progress-track {
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sri-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.sri-progress-fill.fill-green {
+  background: var(--accent-secure);
+}
+
+.sri-progress-fill.fill-amber {
+  background: var(--accent-warning);
+}
+
+.sri-progress-fill.fill-red {
+  background: var(--danger);
+}
+
+/* ── Stage Label ── */
+.sri-stage {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+/* ── Retry Button ── */
+.sri-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.sri-retry-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}

@@ -1,0 +1,84 @@
+# =============================================================================
+# Release Drafter — Auto-categorize PRs into draft release notes
+# =============================================================================
+name-template: "Hades v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+
+categories:
+  - title: "Security"
+    labels:
+      - "security"
+      - "vulnerability"
+      - "crypto"
+  - title: "Features"
+    labels:
+      - "feature"
+      - "enhancement"
+  - title: "Bug Fixes"
+    labels:
+      - "bug"
+      - "fix"
+  - title: "Dependencies"
+    labels:
+      - "dependencies"
+      - "automated"
+  - title: "Infrastructure"
+    labels:
+      - "ci"
+      - "infrastructure"
+      - "deployment"
+  - title: "Documentation"
+    labels:
+      - "documentation"
+  - title: "Testing"
+    labels:
+      - "testing"
+
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-title-escapes: '\<*_&'
+
+version-resolver:
+  major:
+    labels:
+      - "breaking"
+  minor:
+    labels:
+      - "feature"
+      - "enhancement"
+  patch:
+    labels:
+      - "bug"
+      - "fix"
+      - "dependencies"
+  default: patch
+
+autolabeler:
+  - label: "ci"
+    files:
+      - ".github/**"
+  - label: "rust"
+    files:
+      - "crates/**"
+      - "Cargo.*"
+  - label: "frontend"
+    files:
+      - "client/**"
+  - label: "documentation"
+    files:
+      - "docs/**"
+      - "*.md"
+  - label: "crypto"
+    files:
+      - "crates/hades-crypto/**"
+  - label: "deployment"
+    files:
+      - "deployment/**"
+
+template: |
+  # Hades $RESOLVED_VERSION
+
+  **True Privacy is Sovereignty.**
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/Ashutosh0x/hades/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

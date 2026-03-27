@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════════════
+   MessageStatus — delivery indicator styles
+   ═══════════════════════════════════════════════════════════════ */
+
+.message-status-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.message-status-anim {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── State colors ── */
+
+.status-pending {
+  color: var(--text-muted);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-sent {
+  color: var(--text-secondary);
+}
+
+.status-delivered {
+  color: var(--text-secondary);
+}
+
+.status-read {
+  color: var(--accent-secure);
+  filter: brightness(1.15);
+}
+
+.status-failed {
+  color: var(--danger);
+  animation: status-pulse-fast 1.5s ease-in-out infinite;
+}
+
+/* ── Group count badge ── */
+
+.group-read-count {
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+/* ── Animations ── */
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+@keyframes status-pulse-fast {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}

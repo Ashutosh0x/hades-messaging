@@ -1,0 +1,104 @@
+.toast-container {
+  position: fixed;
+  top: env(safe-area-inset-top, 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+  width: 90%;
+  max-width: 400px;
+}
+
+.toast-notification {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  min-width: 280px;
+  backdrop-filter: blur(8px);
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.toast-close:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+/* ── Toast Types ── */
+.toast-security {
+  border-left: 3px solid var(--accent-secure);
+  background: linear-gradient(90deg, rgba(46,204,113,0.1) 0%, var(--bg-surface-elevated) 20%);
+}
+
+.toast-security .toast-icon {
+  color: var(--accent-secure);
+}
+
+.toast-error {
+  border-left: 3px solid var(--danger);
+  background: linear-gradient(90deg, rgba(231,76,60,0.1) 0%, var(--bg-surface-elevated) 20%);
+}
+
+.toast-error .toast-icon {
+  color: var(--danger);
+}
+
+.toast-warning {
+  border-left: 3px solid var(--accent-warning);
+}
+
+.toast-warning .toast-icon {
+  color: var(--accent-warning);
+}
+
+.toast-success {
+  border-left: 3px solid var(--accent-secure);
+}
+
+.toast-success .toast-icon {
+  color: var(--accent-secure);
+}
+
+.toast-info {
+  border-left: 3px solid var(--accent-brand);
+}
+
+.toast-info .toast-icon {
+  color: var(--accent-brand);
+}

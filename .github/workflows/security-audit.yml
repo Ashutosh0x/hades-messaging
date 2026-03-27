@@ -1,0 +1,98 @@
+# =============================================================================
+# Hades Messaging — Security Audit Pipeline
+# Cargo audit + npm audit + license compliance
+# =============================================================================
+name: Security Audit
+
+on:
+  push:
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
+      - "**/package.json"
+      - "**/package-lock.json"
+      - "**/audit.toml"
+      - ".github/workflows/security-audit.yml"
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cargo-audit:
+    name: Cargo Audit (RustSec)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/audit@v1
+        name: Audit Rust Dependencies
+        with:
+          createIssues: true
+
+  cargo-deny:
+    name: Cargo Deny
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        check: [advisories, bans, licenses, sources]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check ${{ matrix.check }}
+          arguments: --workspace
+
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: npm audit (production)
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (all)
+        run: npm audit --audit-level=critical
+        continue-on-error: true
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-license
+        run: cargo install cargo-license
+
+      - name: Check Rust licenses
+        run: |
+          echo "## Rust Dependency Licenses" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cargo license --all-features 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          if cargo license --all-features 2>&1 | grep -iE "^(GPL|AGPL)" | grep -v "WITH"; then
+            echo "::error::GPL/AGPL licensed dependency detected"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - run: cd client && npm ci --ignore-scripts
+
+      - name: Check npm licenses
+        run: |
+          cd client
+          npx license-checker --production --failOn "GPL-2.0;GPL-3.0;AGPL-3.0" --summary

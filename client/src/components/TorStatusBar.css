@@ -1,0 +1,36 @@
+/* ═══════════════════════════════════════════════════════════════
+   TorStatusBar — connectivity HUD
+   ═══════════════════════════════════════════════════════════════ */
+
+.tor-status-bar {
+  position: relative;
+  overflow: hidden;
+  z-index: var(--z-sticky);
+}
+
+.tor-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.tor-label {
+  font-size: 12px;
+  font-weight: var(--font-semibold);
+  color: var(--bg-base);
+  letter-spacing: 0.03em;
+}
+
+.tor-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 0;
+  border-radius: 0 4px 4px 0;
+}

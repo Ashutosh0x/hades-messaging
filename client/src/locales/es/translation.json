@@ -1,0 +1,69 @@
+{
+  "common": {
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "loading": "Cargando…",
+    "error": "Error",
+    "retry": "Reintentar",
+    "search": "Buscar",
+    "close": "Cerrar"
+  },
+
+  "lock": {
+    "title": "El Centinela 🔒 Bloqueado",
+    "subtitle": "Tus mensajes están cifrados de extremo a extremo.\nNadie puede leerlos excepto tú.",
+    "unlockBiometrics": "DESBLOQUEAR BIOMETRÍA",
+    "enterPin": "Ingresar PIN"
+  },
+
+  "chatList": {
+    "appTitle": "EL CENTINELA",
+    "searchPlaceholder": "Buscar bóvedas seguras…",
+    "navChats": "Chats",
+    "navCalls": "Llamadas",
+    "navContacts": "Contactos",
+    "navSettings": "Ajustes"
+  },
+
+  "calls": {
+    "historyTitle": "HISTORIAL DE LLAMADAS",
+    "incoming": "Entrante",
+    "outgoing": "Saliente",
+    "missed": "Perdida",
+    "clearHistory": "Borrar Historial",
+    "noCallsYet": "Sin llamadas aún",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "calling": "Llamando",
+    "endCall": "Terminar Llamada"
+  },
+
+  "contacts": {
+    "title": "CONTACTOS",
+    "searchPlaceholder": "Buscar contactos…",
+    "addNewContact": "Agregar Nuevo Contacto",
+    "scanQr": "Escanear QR",
+    "enterKey": "Ingresar Clave"
+  },
+
+  "actionSheet": {
+    "createNew": "Crear Nuevo",
+    "allSessionsEncrypted": "Todas las sesiones están cifradas de extremo a extremo",
+    "newSecureChat": "Nuevo Chat Seguro",
+    "newSecureChatDesc": "Iniciar conversación cifrada",
+    "newGroupVault": "Nueva Bóveda Grupal",
+    "newGroupVaultDesc": "Crear espacio grupal seguro",
+    "addContact": "Agregar Contacto",
+    "importContact": "Importar Contacto",
+    "anonymousSession": "Sesión Anónima"
+  },
+
+  "security": {
+    "e2ee": "Cifrado de extremo a extremo",
+    "verified": "Verificado",
+    "unverified": "No verificado"
+  }
+}

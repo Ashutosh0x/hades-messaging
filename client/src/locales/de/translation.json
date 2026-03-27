@@ -1,0 +1,14 @@
+{
+  "chatList": {
+    "appTitle": "DER WÄCHTER",
+    "searchPlaceholder": "Sichere Tresore suchen...",
+    "navChats": "Chats",
+    "navCalls": "Anrufe",
+    "navContacts": "Kontakte",
+    "navSettings": "Einstellungen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache"
+  }
+}

@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════════
+   TypingIndicator — inline typing dots
+   ═══════════════════════════════════════════════════════════════ */
+
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-secure);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.typing-label {
+  opacity: 0.7;
+}
+
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-secure);
+}
