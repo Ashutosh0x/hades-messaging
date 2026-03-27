@@ -1,6 +1,5 @@
 # Hades Messaging
 
-<img width="2816" height="1536" alt="hades messaging" src="https://github.com/user-attachments/assets/f3d85097-6950-4edf-9aa
 
 https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
