@@ -308,12 +308,12 @@ jobs:
           npx @cyclonedx/cyclonedx-npm --output-file ../artifacts/hades-${{ needs.metadata.outputs.version }}-sbom-npm.cdx.json
 
       - name: Attest build provenance (APKs)
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "artifacts/*.apk"
 
       - name: Attest build provenance (AAB)
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "artifacts/*.aab"
         continue-on-error: true
