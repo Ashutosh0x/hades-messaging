@@ -1,10 +1,10 @@
 # Hades Messaging
 
-[![CI](https://github.com/Ashutosh0x/hades/actions/workflows/ci.yml/badge.svg)](https://github.com/Ashutosh0x/hades/actions/workflows/ci.yml)
-[![Security Audit](https://github.com/Ashutosh0x/hades/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades/actions/workflows/security-audit.yml)
-[![CodeQL](https://github.com/Ashutosh0x/hades/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades/actions/workflows/codeql.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Ashutosh0x/hades/badge)](https://scorecard.dev/viewer/?uri=github.com/Ashutosh0x/hades)
-[![Release](https://github.com/Ashutosh0x/hades/actions/workflows/release.yml/badge.svg)](https://github.com/Ashutosh0x/hades/actions/workflows/release.yml)
+[![CI](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml)
+[![CodeQL](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Ashutosh0x/hades-messaging/badge)](https://scorecard.dev/viewer/?uri=github.com/Ashutosh0x/hades-messaging)
+[![Release](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml)
 
 **True end-to-end encrypted messaging with zero metadata leakage**
 
