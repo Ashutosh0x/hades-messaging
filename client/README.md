@@ -1,73 +1,108 @@
-# React + TypeScript + Vite
+# Hades Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React/TypeScript frontend for Hades Messaging, built with Vite and Tauri 2.0.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Technology | Purpose |
+|-----------|---------|
+| React 18 | UI framework |
+| TypeScript 5 | Type-safe logic |
+| Vite 5 | Build tooling + HMR |
+| Framer Motion 12 | Physics-based animations |
+| Zustand 5 | State management (10 stores) |
+| React Router 6 | Client-side routing (18 routes) |
+| Lucide React | Icon system |
+| i18next | Internationalization |
+| date-fns | Date formatting |
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── screens/            # 19 app screens
+│   ├── Onboarding      # Seed phrase generation + import
+│   ├── AppLock          # Vault lock with biometric support
+│   ├── ChatList         # Conversation list with search
+│   ├── Conversation     # Message view with reactions/replies
+│   ├── Contacts         # Contact management
+│   ├── AddContact       # QR code / link contact addition
+│   ├── RecoveryPhrase   # 24-word backup display
+│   ├── SecurityDetails  # BLAKE3 fingerprint verification
+│   ├── Settings         # Privacy / Security / Network
+│   ├── ProfileSettings  # Display name + avatar
+│   ├── Wallet           # Multi-chain wallet dashboard
+│   ├── WalletSend       # Cross-chain send with gas estimation
+│   ├── WalletReceive    # Address QR code display
+│   ├── WalletHistory    # Transaction history
+│   ├── IncomingCall      # Incoming call UI
+│   ├── OutgoingCall      # Outgoing call UI
+│   ├── VoiceCall        # Active voice call
+│   ├── VideoCall        # Active video call
+│   └── CallHistory      # Call log
+├── components/         # 23 reusable components
+├── store/              # 10 Zustand stores
+├── hooks/              # Custom React hooks
+├── types/              # TypeScript definitions
+├── config/             # Constants, env, routes
+├── locales/            # i18n translations
+├── utils/              # Utilities
+├── ui/                 # Icon system
+└── design/             # CSS design tokens
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Install dependencies
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start dev server (standalone, no Tauri)
+npm run dev
+
+# Start with Tauri (from project root)
+cargo tauri dev
+
+# Type check
+npx tsc --noEmit
+
+# Lint
+npx eslint src/
+
+# Build for production
+npm run build
 ```
+
+## Tauri IPC
+
+The client communicates with the Rust backend via `@tauri-apps/api`:
+
+```typescript
+import { invoke } from '@tauri-apps/api/core'
+
+// Identity
+await invoke('create_identity', { passphrase })
+await invoke('unlock_vault', { passphrase })
+await invoke('restore_identity', { mnemonic, passphrase })
+
+// Messaging
+await invoke('send_message', { conversationId, content })
+await invoke('get_messages', { conversationId })
+
+// Wallet
+await invoke('wallet_init')
+await invoke('wallet_send', { request: { chain, to_address, amount } })
+await invoke('wallet_get_all_balances')
+```
+
+## Environment Variables
+
+See `.env.development` for available variables:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Relay server HTTP endpoint |
+| `VITE_WS_URL` | Relay server WebSocket endpoint |
+| `VITE_ENVIRONMENT` | `development` or `production` |
+| `VITE_FEATURE_CALLS` | Enable voice/video calls |
+| `VITE_FEATURE_ANONYMOUS` | Enable anonymous mode |

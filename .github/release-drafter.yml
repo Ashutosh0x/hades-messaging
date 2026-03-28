@@ -33,6 +33,9 @@ categories:
   - title: "Testing"
     labels:
       - "testing"
+  - title: "Wallet"
+    labels:
+      - "wallet"
 
 change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&'
@@ -73,6 +76,9 @@ autolabeler:
   - label: "deployment"
     files:
       - "deployment/**"
+  - label: "wallet"
+    files:
+      - "crates/hades-wallet/**"
 
 template: |
   # Hades $RESOLVED_VERSION

@@ -42,4 +42,13 @@ pub enum CryptoError {
 
     #[error("Sealed sender certificate invalid")]
     InvalidSenderCertificate,
+
+    #[error("Decryption failed")]
+    DecryptionFailed,
+
+    #[error("KDF derivation failed")]
+    KdfError,
+
+    #[error("Invalid length")]
+    InvalidLength,
 }

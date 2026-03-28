@@ -1,57 +1,48 @@
 import { create } from 'zustand'
-import { ConnectionStatusType } from '../types/connection'
+import { invoke } from '@tauri-apps/api/core'
+
+type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
 interface ConnectionState {
-  status: ConnectionStatusType
-  progress: number
-  stage: string
-  isTorConnected: boolean
+  status: ConnectionStatus
+  relayUrl: string
+  error: string | null
+
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  pollStatus: () => Promise<void>
 }
 
-interface ConnectionActions {
-  setConnecting: () => void
-  updateProgress: (progress: number, stage: string) => void
-  setEstablished: () => void
-  setError: (stage: string) => void
-  reset: () => void
-}
+const DEFAULT_RELAY = 'wss://relay.hades.im/v1/ws'
 
-export const useConnectionStore = create<ConnectionState & ConnectionActions>((set) => ({
-  status: 'idle',
-  progress: 0,
-  stage: '',
-  isTorConnected: false,
+export const useConnectionStore = create<ConnectionState>((set, get) => ({
+  status: 'disconnected',
+  relayUrl: DEFAULT_RELAY,
+  error: null,
 
-  setConnecting: () => set({
-    status: 'connecting',
-    progress: 0,
-    stage: 'Initializing',
-    isTorConnected: false,
-  }),
+  connect: async () => {
+    set({ status: 'connecting', error: null })
+    try {
+      await invoke('connect_relay', { relayUrl: get().relayUrl })
+      set({ status: 'connected' })
+    } catch (err) {
+      set({ status: 'error', error: String(err) })
+    }
+  },
 
-  updateProgress: (progress, stage) => set({
-    status: progress >= 100 ? 'established' : 'establishing',
-    progress: Math.min(100, Math.max(0, progress)),
-    stage,
-  }),
+  disconnect: async () => {
+    try {
+      await invoke('disconnect_relay')
+    } catch (_) { /* ignore */ }
+    set({ status: 'disconnected' })
+  },
 
-  setEstablished: () => set({
-    status: 'established',
-    progress: 100,
-    stage: 'Secure route established',
-    isTorConnected: true,
-  }),
-
-  setError: (stage) => set({
-    status: 'error',
-    stage: `Failed: ${stage}`,
-    isTorConnected: false,
-  }),
-
-  reset: () => set({
-    status: 'idle',
-    progress: 0,
-    stage: '',
-    isTorConnected: false,
-  }),
+  pollStatus: async () => {
+    try {
+      const status = await invoke<string>('get_connection_status')
+      set({ status: status as ConnectionStatus })
+    } catch (_) {
+      set({ status: 'disconnected' })
+    }
+  },
 }))

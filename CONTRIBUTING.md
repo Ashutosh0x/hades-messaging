@@ -75,12 +75,14 @@ Hades uses a clean crate separation:
 | Crate | Purpose | Security Level |
 |-------|---------|---------------|
 | `hades-crypto` | Cryptographic primitives (PQXDH, Double Ratchet, Sealed Sender) | 🔴 Critical |
-| `hades-identity` | Identity management, key bundles, device sync | 🔴 Critical |
+| `hades-identity` | Identity management, BIP-39 seed, key bundles, device sync | 🔴 Critical |
 | `hades-onion` | Tor integration, onion routing, cover traffic | 🔴 Critical |
-| `hades-relay` | Message relay server | 🟡 High |
+| `hades-wallet` | Multi-chain HD wallet (BTC, ETH, SOL, 9 more chains) | 🔴 Critical |
+| `hades-relay` | Message relay server, challenge-response auth | 🟡 High |
 | `hades-proto` | Protocol definitions (protobuf) | 🟡 High |
 | `hades-common` | Shared types and utilities | 🟢 Standard |
-| `client/` | React/TypeScript frontend | 🟢 Standard |
+| `src-tauri/` | Tauri 2.0 bridge (commands, DB, pipeline, WebSocket) | 🟡 High |
+| `client/` | React/TypeScript frontend (19 screens, 10 stores) | 🟢 Standard |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed diagrams.
 
@@ -191,9 +193,11 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 | `crypto` | `hades-crypto` |
 | `identity` | `hades-identity` |
 | `onion` | `hades-onion` |
+| `wallet` | `hades-wallet` |
 | `relay` | `hades-relay` |
 | `proto` | `hades-proto` |
 | `common` | `hades-common` |
+| `tauri` | `src-tauri/` |
 | `client` | Frontend |
 | `ci` | CI/CD workflows |
 | `deploy` | Deployment/infrastructure |
@@ -278,6 +282,7 @@ Changes to the following areas receive extra scrutiny:
 - Any change to `crates/hades-crypto/`
 - Any change to `crates/hades-identity/`
 - Any change to `crates/hades-onion/`
+- Any change to `crates/hades-wallet/`
 - Any change to `deployment/`
 - Any change to `docs/CRYPTOGRAPHY.md` or `docs/THREAT_MODEL.md`
 - Any new dependency in security-critical crates

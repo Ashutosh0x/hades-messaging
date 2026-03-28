@@ -21,7 +21,6 @@ pub enum NotificationConfig {
 
 /// A background service stub that simulates intercepting a network payload,
 /// decrypting it (if the vault is unlocked), and deciding what to show to the OS.
-#[tauri::command]
 pub fn handle_incoming_push(
     payload: SealedPayload,
     config: NotificationConfig,

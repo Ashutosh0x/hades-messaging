@@ -20,7 +20,7 @@
 1. **Description** of the vulnerability
 2. **Steps to reproduce** (minimal proof of concept)
 3. **Potential impact** assessment
-4. **Affected component** (hades-crypto, hades-onion, hades-identity, client, relay)
+4. **Affected component** (hades-crypto, hades-onion, hades-identity, hades-wallet, client, relay, src-tauri)
 5. **Suggested fix** (if any)
 
 ### Response Timeline
@@ -36,8 +36,8 @@
 
 | Severity | Examples |
 |----------|---------|
-| **Critical** | RCE, key exfiltration, authentication bypass, sealed sender de-anonymization |
-| **High** | Metadata leakage, traffic correlation, cryptographic weakness |
+| **Critical** | RCE, key exfiltration, authentication bypass, sealed sender de-anonymization, wallet private key exposure |
+| **High** | Metadata leakage, traffic correlation, cryptographic weakness, wallet transaction manipulation |
 | **Medium** | Denial of service, information disclosure (non-key material) |
 | **Low** | UI issues, non-exploitable edge cases |
 
@@ -60,3 +60,7 @@ This project employs:
 - SLSA Build Level 3 provenance on releases
 - Signed release artifacts with SHA-256/SHA-512 checksums
 - Reproducible builds (planned)
+- BIP-39 seed + all wallet keys encrypted at rest (SQLCipher + Argon2id)
+- Zeroize-on-drop for all key material (messaging and wallet)
+- Challenge-response relay authentication (Ed25519 nonce signing)
+- 9 CI/CD workflows with security audit, container scan, and dependency review

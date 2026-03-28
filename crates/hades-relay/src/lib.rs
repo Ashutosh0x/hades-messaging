@@ -15,7 +15,9 @@
 //! - **Rate Limiter**: Per-identity request throttling
 //! - **Metrics**: Prometheus endpoint for operational monitoring
 
+pub mod auth;
 pub mod config;
+pub mod message_queue;
 pub mod prekey_store;
 pub mod rate_limit;
 pub mod router;

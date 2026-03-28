@@ -5,7 +5,6 @@ https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
 
 
-
 [![CI](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml)
 [![Security Audit](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml)
 [![CodeQL](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml)
@@ -14,32 +13,34 @@ https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
 **True end-to-end encrypted messaging with zero metadata leakage**
 
-Hades is a sovereign, privacy-first messaging application that implements state-of-the-art cryptographic protocols including post-quantum secure key exchange (PQXDH), Double Ratchet with SPQR, and forced onion routing via Tor. Unlike traditional messengers, Hades ensures that even the server infrastructure learns nothing about your communications.
+Hades is a sovereign, privacy-first messaging application that implements state-of-the-art cryptographic protocols including post-quantum secure key exchange (PQXDH), Double Ratchet with SPQR, forced onion routing via Tor, and a built-in multi-chain HD wallet — all governed by a single BIP-39 seed phrase. Unlike traditional messengers, Hades ensures that even the server infrastructure learns nothing about your communications.
 
 ---
 
 ## About
 
-Hades is a high-fidelity, zero-trust communication system built for individuals and organizations who require absolute data sovereignty. It replaces centralized messaging services with a distributed, end-to-end encrypted architecture that runs on your own hardware.
+Hades is a high-fidelity, zero-trust communication system built for individuals and organizations who require absolute data sovereignty. It replaces centralized messaging services with a distributed, end-to-end encrypted architecture that runs on your own hardware, with an integrated non-custodial crypto wallet for private peer-to-peer payments.
 
 ### Key Features
 
-- **True E2EE** -- Post-quantum secure PQXDH + Double Ratchet
-- **Zero Metadata** -- Double-sealed sender, no phone numbers required
-- **Tor Integration** -- Forced multi-hop onion routing with pluggable transports
-- **Multi-Device** -- Sesame algorithm for device synchronization
-- **Encrypted Calls** -- Voice/video with custom SRTP keying
-- **Local First** -- SQLCipher encrypted local storage with Argon2id
-- **No Cloud** -- Self-hostable, no AWS/GCP dependencies
-- **Verifiable** -- Reproducible builds, open source
-- **Anti-Forensics** -- Zeroize-on-drop, plausible deniability volumes, emergency wipe
-- **Cover Traffic** -- Chaff packets and timing jitter defeat traffic analysis
+- **True E2EE** — Post-quantum secure PQXDH + Double Ratchet
+- **Zero Metadata** — Double-sealed sender, no phone numbers required
+- **Unified Seed** — One BIP-39 mnemonic governs messaging identity + all wallet keys
+- **Tor Integration** — Forced multi-hop onion routing with pluggable transports
+- **Multi-Chain Wallet** — Send/receive BTC, ETH, SOL + 9 more chains from inside chats
+- **Multi-Device** — Sesame algorithm for device synchronization
+- **Encrypted Calls** — Voice/video with custom SRTP keying
+- **Local First** — SQLCipher encrypted local storage with Argon2id
+- **No Cloud** — Self-hostable, no AWS/GCP dependencies
+- **Verifiable** — Reproducible builds, open source
+- **Anti-Forensics** — Zeroize-on-drop, plausible deniability volumes, emergency wipe
+- **Cover Traffic** — Chaff packets and timing jitter defeat traffic analysis
 
 ---
 
 ## Tech Stack
 
-### Client (Mobile and Desktop)
+### Client (Desktop and Mobile)
 
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
@@ -51,20 +52,25 @@ Hades is a high-fidelity, zero-trust communication system built for individuals 
 ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge&logo=react&logoColor=white)
 ![Tor](https://img.shields.io/badge/Tor_(Arti)-7D4698?style=for-the-badge&logo=torproject&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Bitcoin](https://img.shields.io/badge/Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white)
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)
+![Solana](https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white)
 
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | Tauri | 2.0 | High-performance Rust-based app framework |
-| Rust | 1.75+ | Memory-safe backend for cryptography and Tor |
+| Rust | 1.75+ | Memory-safe backend for cryptography, Tor, and wallet |
 | React | 18 | Interactive UI with Vite |
 | TypeScript | 5.0 | Type-safe frontend logic |
 | Framer Motion | 12 | Physics-based UI animations |
 | SQLCipher | AES-256 | Encrypted-at-rest local storage |
+| BIP-39/BIP-32 | — | HD wallet key derivation from seed phrase |
 
 ### Security and Protocol
 
 | Component | Implementation |
 |-----------|---------------|
+| Seed Identity | BIP-39 (24 words) → `m/13'/0'/0'` messaging + `m/44'/…` wallet |
 | Key Exchange | X25519 + ML-KEM-768 (PQXDH) |
 | Symmetric Encryption | ChaCha20-Poly1305 |
 | Hash | BLAKE3 |
@@ -78,6 +84,23 @@ Hades is a high-fidelity, zero-trust communication system built for individuals 
 | Contact Discovery | SimplePIR (planned) |
 | Anonymous Auth | Blind signatures + ZK proofs |
 | Anti-Forensics | Zeroize-on-drop, plausible deniability |
+
+### Multi-Chain Wallet
+
+| Chain | Ticker | Derivation Path | Type |
+|-------|--------|-----------------|------|
+| Bitcoin | BTC | `m/44'/0'/0'/0/0` | UTXO |
+| Ethereum | ETH | `m/44'/60'/0'/0/0` | EVM |
+| Solana | SOL | `m/44'/501'/0'/0/0` | Ed25519 |
+| Polygon | MATIC | `m/44'/60'/0'/0/0` | EVM |
+| Arbitrum | ARB | `m/44'/60'/0'/0/0` | EVM |
+| Optimism | OP | `m/44'/60'/0'/0/0` | EVM |
+| Avalanche | AVAX | `m/44'/60'/0'/0/0` | EVM |
+| Base | ETH | `m/44'/60'/0'/0/0` | EVM |
+| BNB Smart Chain | BNB | `m/44'/60'/0'/0/0` | EVM |
+| Litecoin | LTC | `m/44'/2'/0'/0/0` | UTXO |
+| Dogecoin | DOGE | `m/44'/3'/0'/0/0` | UTXO |
+| Tron | TRX | `m/44'/195'/0'/0/0` | TVM |
 
 ### Sovereign Infrastructure
 
@@ -93,79 +116,192 @@ Hades is a high-fidelity, zero-trust communication system built for individuals 
 ## Architecture
 
 ```
-hades/
-|-- crates/                         # Rust backend crates
-|   |-- hades-crypto/               # Cryptographic primitives
-|   |   |-- aead.rs                 #   ChaCha20-Poly1305
-|   |   |-- anti_forensics.rs       #   Secure memory, dual volumes, emergency wipe
-|   |   |-- double_ratchet.rs       #   Double Ratchet
-|   |   |-- entropy.rs              #   CSPRNG seeds
-|   |   |-- fingerprint.rs          #   BLAKE3 contact fingerprints
-|   |   |-- kdf.rs                  #   HKDF key derivation
-|   |   |-- padding.rs              #   MTU bucket padding
-|   |   |-- pqxdh.rs                #   Post-quantum key exchange
-|   |   |-- sealed_sender.rs        #   Sealed sender v1
-|   |   |-- sealed_sender_v2.rs     #   Double-sealed envelopes (512B/8KB/64KB)
-|   |
-|   |-- hades-identity/             # Identity and key management
-|   |   |-- anonymous_credentials.rs #   ZK auth, blind credentials
-|   |   |-- fingerprint.rs          #   Safety numbers
-|   |   |-- identity.rs             #   Key pair management
-|   |   |-- key_bundle.rs           #   Prekey bundles
-|   |   |-- key_store.rs            #   Key storage
-|   |   |-- multi_device.rs         #   Device synchronization
-|   |
-|   |-- hades-onion/                # Tor integration
-|   |   |-- bridge_rotation.rs      #   Auto-rotation (7-30d), 5 distribution methods
-|   |   |-- cell.rs                 #   Fixed-size transport cells
-|   |   |-- circuit.rs              #   Multi-hop encrypted tunnels
-|   |   |-- cover_traffic.rs        #   Chaff packets, Poisson delays, timing jitter
-|   |   |-- guard.rs                #   Guard node selection
-|   |   |-- onion_encrypt.rs        #   Layered encryption
-|   |   |-- pluggable_transport.rs  #   Obfs4, WebTunnel, Snowflake, Meek, Obfs5
-|   |   |-- relay_node.rs           #   Individual hop in a circuit
-|   |
-|   |-- hades-relay/                # Message relay server
-|   |-- hades-proto/                # Protocol definitions
-|   |-- hades-common/               # Shared types and utilities
-|
-|-- client/                         # TypeScript/React frontend
-|   |-- src/
-|   |   |-- screens/                # App screens
-|   |   |   |-- AppLock.tsx         #   Premium vault lock (Framer Motion)
-|   |   |   |-- ChatList.tsx        #   Conversation list with delivery indicators
-|   |   |   |-- SecureRouteIndicator.tsx # 8-stage connection establishment HUD
-|   |   |   |-- Conversation.tsx    #   Message view with status per bubble
-|   |   |   |-- Onboarding.tsx      #   Entropy-aware key generation
-|   |   |   |-- SecurityDetails.tsx #   BLAKE3 fingerprint verification
-|   |   |-- components/             # Reusable UI components
-|   |   |   |-- MessageStatus.tsx   #   Animated delivery indicators (5 states)
-|   |   |   |-- TypingIndicator.tsx #   Bouncing dot animation
-|   |   |-- hooks/                  # React hooks
-|   |   |   |-- useSecureRoute.ts   #   Secure route establishment simulation
-|   |   |-- store/                  # Zustand state management
-|   |   |   |-- connectionStore.ts  #   Connection state machine (status, stage)
-|   |   |   |-- conversationStore.ts #  Messages with DeliveryStatus
-|   |   |   |-- deviceStore.ts      #   Linked device management (auto-detect, revoke)
-|   |   |   |-- securityStore.ts    #   Vault lock, fingerprints
-|   |   |   |-- settingsStore.ts    #   Persistent privacy/security/network toggles
-|   |   |-- types/                  # TypeScript type definitions
-|   |   |   |-- message.ts          #   DeliveryStatus enum, receipt types
-|   |   |-- config/                 # Constants, routes, env
-|   |   |-- locales/                # i18n translations
-|   |   |-- utils/                  # Time, feature flags, haptics
-|   |   |-- ui/                     # Icon system
-|   |   |-- design/                 # Design tokens (CSS)
-|
-|-- deployment/                     # Infrastructure
-|   |-- configuration.nix           # NixOS hardened relay config
-|
-|-- docs/                           # Technical documentation
-|   |-- CRYPTOGRAPHY.md             # Protocol spec with 2026 bibliography
-|   |-- THREAT_MODEL.md             # 6 adversary classes, 30+ mitigations
-|
-|-- gen/android/                    # Generated Android project
-|-- src-tauri/                      # Tauri configuration
+hades-messaging/
+├── crates/                          # Rust backend crates (7 crates)
+│   ├── hades-crypto/                # Cryptographic primitives
+│   │   ├── aead.rs                  #   ChaCha20-Poly1305
+│   │   ├── anti_forensics.rs        #   Secure memory, dual volumes, emergency wipe
+│   │   ├── audio.rs                 #   Audio cryptographic processing
+│   │   ├── double_ratchet.rs        #   Double Ratchet with SPQR
+│   │   ├── entropy.rs               #   CSPRNG seeds
+│   │   ├── fingerprint.rs           #   BLAKE3 contact fingerprints
+│   │   ├── kdf.rs                   #   HKDF key derivation
+│   │   ├── notifications.rs         #   Encrypted notification payloads
+│   │   ├── padding.rs               #   MTU bucket padding
+│   │   ├── pqxdh.rs                 #   Post-quantum key exchange
+│   │   ├── screenshot_guard.rs      #   Screenshot protection
+│   │   ├── sealed_sender.rs         #   Sealed sender v1
+│   │   ├── sealed_sender_v2.rs      #   Double-sealed envelopes (512B/8KB/64KB)
+│   │   ├── search.rs                #   Encrypted search indexing
+│   │   └── sender_keys.rs           #   Sender key distribution
+│   │
+│   ├── hades-identity/              # Identity and key management
+│   │   ├── anonymous_credentials.rs #   ZK auth, blind credentials
+│   │   ├── fingerprint.rs           #   Safety numbers
+│   │   ├── identity.rs              #   Key pair management
+│   │   ├── key_bundle.rs            #   Prekey bundles
+│   │   ├── key_store.rs             #   Key storage
+│   │   ├── multi_device.rs          #   Device synchronization
+│   │   ├── recovery.rs              #   Account recovery flow
+│   │   └── seed.rs                  #   BIP-39 unified seed → messaging + wallet
+│   │
+│   ├── hades-onion/                 # Tor integration
+│   │   ├── arti_client.rs           #   Arti 2.0 client wrapper
+│   │   ├── bridge_rotation.rs       #   Auto-rotation (7–30d), 5 distribution methods
+│   │   ├── cell.rs                  #   Fixed-size transport cells
+│   │   ├── circuit.rs               #   Multi-hop encrypted tunnels
+│   │   ├── commands.rs              #   Tor-related Tauri IPC commands
+│   │   ├── cover_traffic.rs         #   Chaff packets, Poisson delays, timing jitter
+│   │   ├── guard.rs                 #   Guard node selection
+│   │   ├── onion_encrypt.rs         #   Layered encryption
+│   │   ├── pluggable_transport.rs   #   Obfs4, WebTunnel, Snowflake, Meek, Obfs5
+│   │   └── relay_node.rs            #   Individual hop in a circuit
+│   │
+│   ├── hades-wallet/                # Multi-chain HD wallet
+│   │   ├── hd.rs                    #   BIP-32/44 hierarchical deterministic derivation
+│   │   ├── chains/                  #   Chain-specific implementations
+│   │   │   ├── bitcoin.rs           #     Bitcoin (P2WPKH)
+│   │   │   ├── ethereum.rs          #     Ethereum + EVM chains (EIP-155)
+│   │   │   └── solana.rs            #     Solana (Ed25519)
+│   │   ├── transaction.rs           #   Transaction building + signing + broadcasting
+│   │   ├── rpc.rs                   #   Multi-chain RPC client
+│   │   ├── rpc_cache.rs             #   RPC response caching
+│   │   └── price.rs                 #   Token price feeds
+│   │
+│   ├── hades-relay/                 # Message relay server
+│   │   ├── auth.rs                  #   Challenge-response relay authentication
+│   │   ├── server.rs                #   Axum-based WebSocket server
+│   │   ├── router.rs                #   Message routing
+│   │   ├── session.rs               #   Session management
+│   │   ├── message_queue.rs         #   Offline message queuing
+│   │   ├── prekey_store.rs          #   Server-side prekey storage
+│   │   ├── rate_limit.rs            #   Rate limiting (Governor)
+│   │   └── config.rs                #   Server configuration
+│   │
+│   ├── hades-proto/                 # Protocol definitions
+│   │   ├── messages.rs              #   Protobuf message types
+│   │   └── proto/                   #   Raw .proto files
+│   │
+│   └── hades-common/                # Shared types and utilities
+│       ├── types.rs                 #   Shared domain types
+│       ├── constants.rs             #   Global constants
+│       └── error.rs                 #   Unified error types
+│
+├── client/                          # TypeScript/React frontend
+│   └── src/
+│       ├── screens/                 # App screens (19 screens)
+│       │   ├── Onboarding.tsx       #   Entropy-aware key generation
+│       │   ├── AppLock.tsx          #   Premium vault lock (Framer Motion)
+│       │   ├── ChatList.tsx         #   Conversation list with delivery indicators
+│       │   ├── Conversation.tsx     #   Message view with status per bubble
+│       │   ├── Contacts.tsx         #   Contact list management
+│       │   ├── AddContact.tsx       #   QR / link based contact addition
+│       │   ├── RecoveryPhrase.tsx   #   24-word seed phrase backup
+│       │   ├── SecurityDetails.tsx  #   BLAKE3 fingerprint verification
+│       │   ├── Settings.tsx         #   Privacy / Security / Network settings
+│       │   ├── ProfileSettings.tsx  #   Profile editing
+│       │   ├── Wallet.tsx           #   Multi-chain wallet dashboard
+│       │   ├── WalletSend.tsx       #   Cross-chain send flow
+│       │   ├── WalletReceive.tsx    #   Address & QR display
+│       │   ├── WalletHistory.tsx    #   Transaction history
+│       │   ├── IncomingCall.tsx     #   Incoming call screen
+│       │   ├── OutgoingCall.tsx     #   Outgoing call screen
+│       │   ├── VoiceCall.tsx        #   Active voice call
+│       │   ├── VideoCall.tsx        #   Active video call
+│       │   └── CallHistory.tsx      #   Call log
+│       ├── components/              # Reusable UI components (23 components)
+│       │   ├── MessageBubble.tsx    #   Chat bubble with reactions/replies
+│       │   ├── MessageStatus.tsx    #   Animated delivery indicators (5 states)
+│       │   ├── TypingIndicator.tsx  #   Bouncing dot animation
+│       │   ├── SecureRouteIndicator.tsx  #   8-stage connection HUD
+│       │   ├── TorStatusBar.tsx     #   Tor connection status
+│       │   ├── BurnTimer.tsx        #   Disappearing message countdown
+│       │   ├── VoiceRecorder.tsx    #   Audio recording with waveform
+│       │   ├── ReactionPicker.tsx   #   Emoji reaction selector
+│       │   ├── ReplyPreview.tsx     #   Message reply preview
+│       │   ├── ActionSheet.tsx      #   Bottom sheet actions
+│       │   ├── InChatSendSheet.tsx  #   In-conversation crypto send
+│       │   ├── CryptoTransferBubble.tsx  #  In-chat transfer display
+│       │   ├── TokenSelector.tsx    #   Chain/token picker
+│       │   ├── ChainBadge.tsx       #   Chain identifier badge
+│       │   └── ToastContainer.tsx   #   Notification toasts
+│       ├── hooks/                   # React hooks
+│       │   ├── useSecureRoute.ts    #   Secure route establishment
+│       │   └── useVirtualMessages.ts #  Virtualized message list
+│       ├── store/                   # Zustand state management (10 stores)
+│       │   ├── connectionStore.ts   #   Connection state machine
+│       │   ├── conversationStore.ts #   Messages with DeliveryStatus
+│       │   ├── contactStore.ts      #   Contact management
+│       │   ├── deviceStore.ts       #   Linked device management
+│       │   ├── securityStore.ts     #   Vault lock, fingerprints
+│       │   ├── settingsStore.ts     #   Privacy/security/network toggles
+│       │   ├── walletStore.ts       #   Wallet balances, accounts, transactions
+│       │   ├── callStore.ts         #   Voice/video call state
+│       │   ├── networkStore.ts      #   Tor connection + network status
+│       │   └── toastStore.ts        #   Toast notification queue
+│       ├── types/                   # TypeScript type definitions
+│       ├── config/                  # Constants, routes, env
+│       ├── locales/                 # i18n translations
+│       ├── utils/                   # Time, feature flags, haptics
+│       ├── ui/                      # Icon system
+│       └── design/                  # Design tokens (CSS)
+│
+├── src-tauri/                       # Tauri 2.0 bridge (Rust ↔ React IPC)
+│   └── src/
+│       ├── lib.rs                   # App entry, command registration
+│       ├── commands.rs              # Legacy identity/message/network commands
+│       ├── commands/
+│       │   ├── auth_commands.rs     # BIP-39 identity create/restore/unlock
+│       │   └── contact_commands.rs  # Contact link/QR/bundle exchange
+│       ├── wallet_commands.rs       # Wallet init/send/balance/history
+│       ├── auth.rs                  # Challenge-response authentication
+│       ├── websocket.rs             # Relay WebSocket connection
+│       ├── pipeline.rs              # Cryptographic message pipeline
+│       ├── contacts.rs              # Contact management logic
+│       ├── state.rs                 # Application state (AppState)
+│       ├── db/                      # SQLCipher database layer
+│       │   ├── mod.rs               # DB initialization, connection pool
+│       │   ├── migrations.rs        # Schema migrations
+│       │   ├── messages.rs          # Message storage
+│       │   ├── contacts.rs          # Contact storage
+│       │   ├── keys.rs              # Key material storage
+│       │   ├── sessions.rs          # Session storage
+│       │   ├── wallet.rs            # Wallet accounts & transactions
+│       │   ├── reactions.rs         # Message reactions
+│       │   └── pool.rs              # Connection pooling
+│       ├── burn_timer.rs            # Disappearing messages background task
+│       ├── biometric.rs             # Biometric authentication
+│       ├── notifications.rs         # Push notification registration
+│       ├── receipts.rs              # Delivery/read receipt handling
+│       ├── typing.rs                # Typing indicator relay
+│       ├── search.rs                # Encrypted search
+│       ├── media.rs                 # Media attachment handling
+│       └── error.rs                 # Unified error types
+│
+├── deployment/                      # Infrastructure
+│   ├── configuration.nix            # NixOS hardened relay config
+│   ├── Dockerfile.relay             # Container image for relay
+│   ├── Caddyfile                    # Reverse proxy config
+│   └── deploy.sh                    # Deployment automation
+│
+├── docs/                            # Technical documentation
+│   ├── ARCHITECTURE.md              # 23+ Mermaid diagrams with protocol details
+│   ├── CRYPTOGRAPHY.md              # Protocol spec with 2026 bibliography
+│   └── THREAT_MODEL.md              # 6 adversary classes, 30+ mitigations
+│
+├── .github/                         # CI/CD and repository governance
+│   ├── workflows/                   # 9 GitHub Actions workflows
+│   ├── CODEOWNERS                   # Code ownership rules
+│   ├── dependabot.yml               # Dependency update automation
+│   └── release-drafter.yml          # Automated release note generation
+│
+├── Cargo.toml                       # Workspace manifest (8 members)
+├── Cargo.lock                       # Reproducible dependency resolution
+├── deny.toml                        # cargo-deny configuration
+├── CHANGELOG.md                     # Keep-a-Changelog format
+├── CONTRIBUTING.md                  # Development standards
+├── SECURITY.md                      # Vulnerability reporting policy
+└── LICENSE                          # MIT License
 ```
 
 ---
@@ -181,7 +317,7 @@ graph TB
     subgraph CLIENT["Client"]
         UI["React 18 + TypeScript"]
         BRIDGE["Tauri 2.0 IPC"]
-        CORE["Rust Core<br/>hades-crypto / hades-identity<br/>hades-onion / hades-proto"]
+        CORE["Rust Core<br/>hades-crypto / hades-identity<br/>hades-onion / hades-wallet<br/>hades-proto"]
         STORE["SQLCipher + Argon2id"]
     end
 
@@ -203,6 +339,35 @@ graph TB
     style CLIENT fill:#0d1117,stroke:#58a6ff,stroke-width:2px,color:#c9d1d9
     style TOR fill:#1a0a2e,stroke:#a855f7,stroke-width:2px,color:#e9d5ff
     style INFRA fill:#0a1628,stroke:#f97316,stroke-width:2px,color:#fed7aa
+```
+
+### Unified Seed Architecture
+
+```mermaid
+graph TB
+    MNEMONIC["BIP-39 Mnemonic<br/>(24 words)"] --> SEED["Master Seed<br/>(512-bit)"]
+
+    SEED --> MSG_PATH["m/13'/0'/0'<br/>Hades Messaging"]
+    SEED --> BTC_PATH["m/44'/0'/0'/0/0<br/>Bitcoin"]
+    SEED --> ETH_PATH["m/44'/60'/0'/0/0<br/>Ethereum + EVM"]
+    SEED --> SOL_PATH["m/44'/501'/0'/0/0<br/>Solana"]
+
+    MSG_PATH --> ED25519["Ed25519<br/>Signing Key"]
+    MSG_PATH --> X25519["X25519<br/>Key Exchange"]
+    MSG_PATH --> HADES_ID["Hades ID<br/>BLAKE3(pubkey)"]
+
+    BTC_PATH --> BTC_ADDR["Bitcoin Address<br/>P2WPKH"]
+    ETH_PATH --> ETH_ADDR["Ethereum Address<br/>+ Polygon, Arbitrum,<br/>Optimism, Avalanche,<br/>Base, BNB"]
+    SOL_PATH --> SOL_ADDR["Solana Address"]
+
+    style MNEMONIC fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe
+    style SEED fill:#2e1a2e,stroke:#a855f7,color:#e9d5ff
+    style ED25519 fill:#1a2e1a,stroke:#10b981,color:#a7f3d0
+    style X25519 fill:#1a2e1a,stroke:#10b981,color:#a7f3d0
+    style HADES_ID fill:#1a2e1a,stroke:#10b981,color:#a7f3d0
+    style BTC_ADDR fill:#2e2a1a,stroke:#f59e0b,color:#fde68a
+    style ETH_ADDR fill:#2e2a1a,stroke:#f59e0b,color:#fde68a
+    style SOL_ADDR fill:#2e2a1a,stroke:#f59e0b,color:#fde68a
 ```
 
 ### Message Lifecycle
@@ -235,10 +400,13 @@ graph TB
     PASS["Passphrase"] --> ARGON["Argon2id"] --> VAULT["Vault Key"]
     VAULT --> SQL["SQLCipher AES-256"]
 
-    CSPRNG["CSPRNG + Entropy"] --> IK["Identity Key<br/>Ed25519"]
-    CSPRNG --> SPK["Signed Prekey<br/>X25519"]
-    CSPRNG --> PQSPK["PQ Prekey<br/>ML-KEM-768"]
-    CSPRNG --> OPK["One-Time Prekeys<br/>X25519 x 100"]
+    MNEMONIC["BIP-39 Mnemonic"] --> MASTER["Master Seed (512-bit)"]
+
+    MASTER --> IK["Identity Key<br/>Ed25519<br/>m/13'/0'/0'"]
+    MASTER --> SPK["Signed Prekey<br/>X25519"]
+    MASTER --> PQSPK["PQ Prekey<br/>ML-KEM-768"]
+    MASTER --> OPK["One-Time Prekeys<br/>X25519 × 100"]
+    MASTER --> WALLET["Wallet Keys<br/>BIP-44 multi-chain"]
 
     IK --> PQXDH["PQXDH Agreement<br/>DH1 | DH2 | DH3 | DH4 | PQ_SS"]
     SPK --> PQXDH
@@ -252,9 +420,10 @@ graph TB
     MK --> CHACHA["ChaCha20-Poly1305"]
 
     style PASS fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe
-    style CSPRNG fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe
+    style MNEMONIC fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe
     style PQXDH fill:#2e1a2e,stroke:#a855f7,color:#e9d5ff
     style CHACHA fill:#1a2e1a,stroke:#10b981,color:#a7f3d0
+    style WALLET fill:#2e2a1a,stroke:#f59e0b,color:#fde68a
 ```
 
 ### Threat Model
@@ -282,7 +451,7 @@ graph LR
     style D6 fill:#1a2e1a,stroke:#10b981,color:#a7f3d0
 ```
 
-> See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for 23 detailed diagrams covering
+> See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for 23+ detailed diagrams covering
 > PQXDH protocol flow, Double Ratchet internals, Sealed Sender v2 envelope
 > construction, onion circuit building, cover traffic mixing, multi-device
 > Sesame sync, anti-forensics dual-volume, emergency wipe sequence, pluggable
@@ -295,22 +464,23 @@ graph LR
 
 ### Prerequisites
 
-- **Rust** 1.75+ -- [rustup.rs](https://rustup.rs/)
-- **Node.js** 20+ -- [nodejs.org](https://nodejs.org/)
-- **Android Studio** Latest -- [developer.android.com](https://developer.android.com/studio)
+- **Rust** 1.75+ — [rustup.rs](https://rustup.rs/)
+- **Node.js** 20+ — [nodejs.org](https://nodejs.org/)
+- **Android Studio** Latest — [developer.android.com](https://developer.android.com/studio) (mobile builds only)
 - **Java** 17+ (comes with Android Studio)
 
 ### Clone and Setup
 
 ```bash
-git clone https://github.com/Ashutosh0x/hades.git
-cd hades
+git clone https://github.com/Ashutosh0x/hades-messaging.git
+cd hades-messaging
 
 cargo install tauri-cli
 
 cd client && npm install
 cd ..
 
+# Android SDK (mobile builds only)
 export ANDROID_HOME=$HOME/Android/Sdk
 export NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653
 export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools
@@ -319,7 +489,10 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools
 ### Development Build
 
 ```bash
-# Web development with hot reload
+# Desktop development with hot reload
+cargo tauri dev
+
+# Web-only development
 cd client && npm run dev
 
 # Android device
@@ -425,11 +598,11 @@ For the full threat model, see [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
 
 Hades is designed to run without a single cloud provider.
 
-1. **Bare Metal** -- Deploy the relay on your own AMD EPYC hardware with SEV-SNP
-2. **NixOS** -- Use `deployment/configuration.nix` to declare your entire server state
-3. **Onion Identity** -- Your relay is identified by a `.onion` address, immune to DNS filtering
-4. **Media Relay** -- Self-hosted Coturn for E2EE voice/video calls
-5. **Stateless** -- Relay stores zero persistent data; ScyllaDB handles only transient routing
+1. **Bare Metal** — Deploy the relay on your own AMD EPYC hardware with SEV-SNP
+2. **NixOS** — Use `deployment/configuration.nix` to declare your entire server state
+3. **Onion Identity** — Your relay is identified by a `.onion` address, immune to DNS filtering
+4. **Media Relay** — Self-hosted Coturn for E2EE voice/video calls
+5. **Stateless** — Relay stores zero persistent data; ScyllaDB handles only transient routing
 
 ### Recommended Deployment Regions
 
@@ -446,8 +619,8 @@ Hades is designed to run without a single cloud provider.
 
 | Document | Contents |
 |----------|----------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 23 Mermaid diagrams: system overview, client architecture, crate graph, component tree, PQXDH, Double Ratchet, Sealed Sender v2, message lifecycle, Tor circuits, cover traffic, identity management, Sesame sync, anti-forensics, deployment, state machines, CI/CD pipeline, threat model, data flow, key hierarchy |
-| [CRYPTOGRAPHY.md](docs/CRYPTOGRAPHY.md) | 16-algorithm protocol table, PQXDH, Double Ratchet, MLS, AKD, SimplePIR, Sealed Sender v2, 2026 research bibliography |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 23+ Mermaid diagrams: system overview, client architecture, crate graph, component tree, PQXDH, Double Ratchet, Sealed Sender v2, message lifecycle, Tor circuits, cover traffic, identity management, Sesame sync, anti-forensics, deployment, state machines, CI/CD pipeline, threat model, data flow, key hierarchy |
+| [CRYPTOGRAPHY.md](docs/CRYPTOGRAPHY.md) | 16-algorithm protocol table, PQXDH, Double Ratchet, MLS, AKD, SimplePIR, Sealed Sender v2, BIP-39/BIP-32 HD derivation, 2026 research bibliography |
 | [THREAT_MODEL.md](docs/THREAT_MODEL.md) | 6 adversary classes (GPA, active network, server compromise, endpoint, quantum, legal), 30+ mitigations with implementation status |
 
 ---
@@ -499,6 +672,7 @@ Hades uses a comprehensive GitHub Actions pipeline:
 | **Dependency Review** | PR | Block vulnerable/copyleft deps before merge |
 | **Container Scan** | Weekly + push | Trivy filesystem and IaC scanning |
 | **NixOS Check** | Push to deployment/ | Validate relay server NixOS configuration |
+| **Wallet Tests** | Push/PR | hades-wallet crate unit and integration tests |
 | **Release** | Tag push (vX.Y.Z) | Full build → sign → attest → publish with SLSA provenance |
 
 ### Required Repository Secrets
@@ -538,10 +712,13 @@ Licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ### Third-Party Licenses
 
-- [Tauri](https://github.com/tauri-apps/tauri) -- MIT/Apache-2.0
-- [vodozemac](https://github.com/matrix-org/vodozemac) -- Apache-2.0
-- [arti](https://gitlab.torproject.org/tpo/core/arti) -- MIT/Apache-2.0
-- [framer-motion](https://github.com/framer/motion) -- MIT
+- [Tauri](https://github.com/tauri-apps/tauri) — MIT/Apache-2.0
+- [vodozemac](https://github.com/matrix-org/vodozemac) — Apache-2.0
+- [arti](https://gitlab.torproject.org/tpo/core/arti) — MIT/Apache-2.0
+- [framer-motion](https://github.com/framer/motion) — MIT
+- [bitcoin-rs](https://github.com/rust-bitcoin/rust-bitcoin) — CC0-1.0
+- [k256](https://github.com/RustCrypto/elliptic-curves) — MIT/Apache-2.0
+- [ed25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek) — BSD-3-Clause
 
 ---
 

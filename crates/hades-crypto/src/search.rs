@@ -13,7 +13,6 @@ pub struct SearchResult {
 /// message databases using SQLite's FTS5 extension.
 /// Because the database is fully encrypted at rest using Argon2id-derived keys, 
 /// the search occurs totally within the local secure boundary.
-#[tauri::command]
 pub fn query_encrypted_fts5(query: String) -> Result<Vec<SearchResult>, String> {
     if query.trim().is_empty() {
         return Ok(vec![]);

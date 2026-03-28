@@ -9,7 +9,6 @@ pub struct AudioPacket {
 /// Stub for Opus encoding.
 /// In a production environment, this would take raw PCM audio from the frontend,
 /// encode it using `opus` bindings, and return the compressed payload.
-#[tauri::command]
 pub fn encode_opus(pcm_data: Vec<u8>, duration_sec: u32) -> Result<AudioPacket, String> {
     // In production, this uses the `opus` crate to compress raw PCM.
     // Ensure `opus = "0.3"` is added to Cargo.toml when enabling this backend.

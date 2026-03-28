@@ -1,0 +1,38 @@
+{
+  "productName": "Hades",
+  "version": "0.1.0",
+  "identifier": "im.hades.app",
+  "build": {
+    "beforeDevCommand": "cd ../client && npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "cd ../client && npm run build",
+    "frontendDist": "../client/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Hades",
+        "width": 420,
+        "height": 780,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: https://asset.localhost blob: data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {}
+}

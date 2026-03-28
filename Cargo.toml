@@ -7,6 +7,8 @@ members = [
     "crates/hades-proto",
     "crates/hades-relay",
     "crates/hades-onion",
+    "crates/hades-wallet",
+    "src-tauri",
 ]
 
 [workspace.package]
@@ -55,6 +57,14 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 prometheus = "0.13"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# HD Wallet / Identity
+bip32 = { version = "0.5", features = ["secp256k1"] }
+bip39 = { version = "2", features = ["std", "rand"] }
 
 # Utilities
 ulid = { version = "1", features = ["serde"] }

@@ -1,0 +1,56 @@
+[package]
+name = "hades-app"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-shell = "2"
+
+# Internal crates
+hades-crypto = { path = "../crates/hades-crypto" }
+hades-identity = { path = "../crates/hades-identity" }
+hades-onion = { path = "../crates/hades-onion" }
+hades-relay = { path = "../crates/hades-relay" }
+hades-proto = { path = "../crates/hades-proto" }
+hades-common = { path = "../crates/hades-common" }
+hades-wallet = { path = "../crates/hades-wallet" }
+
+# Database
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher", "vtab"] }
+
+# Async
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-native-roots"] }
+futures-util = "0.3"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Crypto
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
+blake3 = "1"
+hkdf = "0.12"
+sha2 = "0.10"
+zeroize = { version = "1", features = ["derive"] }
+chacha20poly1305 = "0.10"
+
+# Utilities
+hex = "0.4"
+base64 = "0.22"
+log = "0.4"
+env_logger = "0.11"
+thiserror = "2"
+anyhow = "1"
+
+[lib]
+name = "hades_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]

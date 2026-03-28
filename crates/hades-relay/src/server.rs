@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::auth::RelayAuthenticator;
 use crate::config::RelayConfig;
 use crate::prekey_store::PrekeyStore;
 use crate::rate_limit::RateLimiter;
@@ -10,6 +11,7 @@ pub struct ServerState {
     pub router: Router,
     pub prekey_store: PrekeyStore,
     pub rate_limiter: RateLimiter,
+    pub authenticator: RelayAuthenticator,
 }
 
 impl ServerState {
@@ -20,6 +22,7 @@ impl ServerState {
             router: Router::new(),
             prekey_store: PrekeyStore::new(),
             rate_limiter,
+            authenticator: RelayAuthenticator::new(),
         })
     }
 }

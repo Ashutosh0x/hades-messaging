@@ -54,9 +54,11 @@ implemented or planned.
 | Read decrypted messages      | SQLCipher AES-256 with Argon2id                 | Implemented |
 | Extract keys from memory     | `zeroize`-on-drop for all key material          | Implemented |
 | Core dump / swap exposure    | Secure memory (mlock, MADV_DONTDUMP)            | Implemented |
-| Screen capture               | Screenshot guard (platform API)                 | Planned     |
+| Screenshot capture           | Screenshot guard (platform API)                 | Planned     |
 | Physical device seizure      | Emergency wipe (local + remote trigger)          | Implemented |
 | Coerced unlock               | Plausible deniability (dual-volume)             | Implemented |
+| Wallet key exfiltration      | BIP-39 seed encrypted in SQLCipher vault        | Implemented |
+| Wallet transaction tampering | All signing done locally, keys never leave device| Implemented |
 
 ### 5. Quantum Adversary
 
@@ -149,6 +151,8 @@ implemented or planned.
 
 | Mitigation | Implementing Module |
 |------------|--------------------|
+| BIP-39 seed identity | `hades-identity/src/seed.rs` |
+| Account recovery | `hades-identity/src/recovery.rs` |
 | Cover traffic (Poisson chaff) | `hades-onion/src/cover_traffic.rs` |
 | MTU bucketing | `hades-crypto/src/sealed_sender_v2.rs` |
 | Timing jitter | `hades-onion/src/cover_traffic.rs` |
@@ -158,9 +162,16 @@ implemented or planned.
 | Zeroize-on-drop | `hades-crypto/src/anti_forensics.rs` |
 | Emergency wipe | `hades-crypto/src/anti_forensics.rs` |
 | Dual-volume deniability | `hades-crypto/src/anti_forensics.rs` |
+| Screenshot guard | `hades-crypto/src/screenshot_guard.rs` |
 | Anonymous auth | `hades-identity/src/anonymous_credentials.rs` |
 | NixOS hardened relay | `deployment/configuration.nix` |
 | BLAKE3 fingerprints | `hades-crypto/src/fingerprint.rs` |
+| HD wallet key derivation | `hades-wallet/src/hd.rs` |
+| Bitcoin transactions | `hades-wallet/src/chains/bitcoin.rs` |
+| Ethereum transactions | `hades-wallet/src/chains/ethereum.rs` |
+| Solana transactions | `hades-wallet/src/chains/solana.rs` |
+| Relay challenge-response auth | `hades-relay/src/auth.rs` |
+| Rate limiting | `hades-relay/src/rate_limit.rs` |
 
 ---
 

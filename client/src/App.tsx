@@ -14,6 +14,10 @@ import CallHistory from './screens/CallHistory'
 import Contacts from './screens/Contacts'
 import AddContact from './screens/AddContact'
 import RecoveryPhrase from './screens/RecoveryPhrase'
+import Wallet from './screens/Wallet'
+import WalletSend from './screens/WalletSend'
+import WalletReceive from './screens/WalletReceive'
+import WalletHistory from './screens/WalletHistory'
 
 export default function App() {
   return (
@@ -33,6 +37,10 @@ export default function App() {
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/add-contact" element={<AddContact />} />
         <Route path="/recovery-phrase" element={<RecoveryPhrase />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/wallet/send" element={<WalletSend />} />
+        <Route path="/wallet/receive" element={<WalletReceive />} />
+        <Route path="/wallet/history" element={<WalletHistory />} />
       </Routes>
       <ToastContainer />
     </>

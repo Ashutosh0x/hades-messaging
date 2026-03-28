@@ -1,0 +1,19 @@
+FROM rust:1.78-slim-bookworm AS builder
+
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+COPY crates/ crates/
+
+# Build only the relay
+RUN cargo build --release --package hades-relay --bin hades-relay
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/release/hades-relay /usr/local/bin/hades-relay
+
+RUN useradd -r -s /bin/false hades
+USER hades
+
+EXPOSE 8443
+CMD ["hades-relay"]

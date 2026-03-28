@@ -13,6 +13,11 @@ ed25519-dalek = { workspace = true, features = ["serde"] }
 x25519-dalek = { workspace = true, features = ["serde"] }
 ml-kem = { workspace = true }
 
+# HD key derivation
+bip32 = { workspace = true }
+bip39 = { workspace = true }
+sha2 = { workspace = true }
+
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -21,3 +26,4 @@ zeroize = { workspace = true }
 base64 = { workspace = true }
 hex = { workspace = true }
 blake3 = { workspace = true }
+getrandom = { workspace = true }

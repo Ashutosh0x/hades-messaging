@@ -22,3 +22,4 @@ pub mod guard;
 pub mod onion_encrypt;
 pub mod pluggable_transport;
 pub mod relay_node;
+pub mod arti_client;

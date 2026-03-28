@@ -26,5 +26,6 @@ pub mod sealed_sender_v2;
 pub mod notifications;
 pub mod audio;
 pub mod search;
+pub mod sender_keys;
 
 pub use error::CryptoError;

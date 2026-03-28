@@ -9,6 +9,7 @@ and references the peer-reviewed research that underpins each component.
 
 | Layer               | Algorithm                       | Standard / Paper                              |
 |---------------------|---------------------------------|-----------------------------------------------|
+| Seed Identity       | BIP-39 → BIP-32 HD derivation         | BIP-39 Spec, BIP-32/44 Standards              |
 | Key Exchange        | X25519 + ML-KEM-768 (PQXDH)    | Signal PQXDH Spec, Bhargavan et al. 2024      |
 | Session Ratchet     | Double Ratchet + SPQR           | Cohn-Gordon et al. 2020, Signal Braid 2024    |
 | Symmetric Cipher    | ChaCha20-Poly1305               | RFC 8439                                      |
@@ -25,10 +26,44 @@ and references the peer-reviewed research that underpins each component.
 | Key Derivation      | Argon2id                        | RFC 9106                                      |
 | Onion Routing       | Arti 2.0 + Vanguards-v2        | Tor Project 2024                              |
 | Cover Traffic       | Poisson-distributed chaff       | Hades cover_traffic module                    |
+| Multi-Chain Wallet  | BIP-32/44 HD + secp256k1/Ed25519 | BIP-32, BIP-44, Bitcoin/Ethereum/Solana specs |
 
 ---
 
-## 1. Key Exchange: PQXDH
+## 1. Unified Seed Identity: BIP-39 → BIP-32
+
+Hades uses a single BIP-39 mnemonic (24 words, 256-bit entropy) as the root
+of all key material. Possession of the seed = possession of the account.
+
+**Derivation paths:**
+- Messaging identity: `m/13'/0'/0'` (purpose 13 = Hades messaging, non-colliding)
+- Wallet keys: `m/44'/{coin_type}'/0'/0/0` (BIP-44 standard per chain)
+
+**Messaging key derivation flow:**
+1. Generate 24-word BIP-39 mnemonic (256-bit entropy, CSPRNG).
+2. Derive 512-bit master seed via PBKDF2-HMAC-SHA512 (2048 iterations).
+3. Derive child key at `m/13'/0'/0'` using BIP-32 hardened derivation.
+4. First 32 bytes → Ed25519 signing key.
+5. SHA-512(Ed25519 seed)[0..32] → X25519 static secret (clamped per curve25519 spec).
+6. Hades ID = BLAKE3(Ed25519 public key).
+
+**Wallet key derivation:**
+Each chain derives keys at standard BIP-44 paths:
+- Bitcoin: `m/44'/0'/0'/0/0` (secp256k1 → P2WPKH)
+- Ethereum: `m/44'/60'/0'/0/0` (secp256k1 → Keccak-256 address)
+- Solana: `m/44'/501'/0'/0/0` (Ed25519)
+- EVM chains share the Ethereum path with chain-specific EIP-155 signing.
+
+All intermediate seed material implements `ZeroizeOnDrop`.
+
+**References:**
+- BIP-39: Mnemonic code for generating deterministic keys
+- BIP-32: Hierarchical Deterministic Wallets
+- BIP-44: Multi-Account Hierarchy for Deterministic Wallets
+
+---
+
+## 2. Key Exchange: PQXDH
 
 Hades uses a hybrid post-quantum key exchange combining X25519 (classical)
 with ML-KEM-768 (post-quantum). This ensures that even a "harvest now,
@@ -48,7 +83,7 @@ session keys established today.
 
 ---
 
-## 2. Session Ratchet: Double Ratchet + SPQR
+## 3. Session Ratchet: Double Ratchet + SPQR
 
 Each message uses a unique symmetric key derived from the Double Ratchet,
 providing per-message forward secrecy and post-compromise security.
@@ -62,7 +97,7 @@ the ratchet, ensuring post-quantum forward secrecy for ongoing sessions.
 
 ---
 
-## 3. Group Messaging: MLS (RFC 9420)
+## 4. Group Messaging: MLS (RFC 9420)
 
 Group conversations use Messaging Layer Security with TreeKEM for
 O(log N) key updates. Known limitations:
@@ -77,7 +112,7 @@ O(log N) key updates. Known limitations:
 
 ---
 
-## 4. Key Transparency: AKD
+## 5. Key Transparency: AKD
 
 Hades publishes identity keys to an Auditable Key Directory so users can
 detect server-side key swaps (MITM). Each client monitors its own entry
@@ -90,7 +125,7 @@ and raises an alert if the key changes without a local key rotation.
 
 ---
 
-## 5. Private Contact Discovery: SimplePIR
+## 6. Private Contact Discovery: SimplePIR
 
 Alice queries the server's user database without revealing which record
 she is looking for. The server processes the entire database against her
@@ -103,7 +138,7 @@ encrypted query and returns an encrypted response.
 
 ---
 
-## 6. Sealed Sender v2
+## 7. Sealed Sender v2
 
 Double-layered metadata encryption:
 - **Outer seal**: encrypted to the relay (peeled at the relay hop).
@@ -114,7 +149,7 @@ packet-length analysis.
 
 ---
 
-## 7. Cover Traffic
+## 8. Cover Traffic
 
 Chaff packets (Poisson-distributed, CSPRNG-filled) are sent when the app
 is active to mask real message timing. Timing jitter (50-500ms) is added
@@ -122,7 +157,7 @@ to every real message send.
 
 ---
 
-## 8. Anti-Forensics
+## 9. Anti-Forensics
 
 - All key material uses `zeroize`-on-drop.
 - Emergency wipe destroys the SQLCipher database and all cached data.
@@ -131,7 +166,7 @@ to every real message send.
 
 ---
 
-## 9. Onion Routing: Arti 2.0
+## 10. Onion Routing: Arti 2.0
 
 - Vanguard-v2 multi-layer guard rotation (Fixed -> L2 -> L3).
 - Pluggable transports: Obfs4, WebTunnel, Snowflake 2.0, Meek.
@@ -144,7 +179,7 @@ to every real message send.
 
 ---
 
-## 10. Known Limitations
+## 11. Known Limitations
 
 1. **Authentication in PQXDH is not quantum-secure.** An active quantum
    adversary can mount unknown key-share attacks. Mitigation: Dilithium5
@@ -168,19 +203,31 @@ Each protocol layer maps to a Rust crate module:
 
 | Protocol Layer | Crate | Source File |
 |----------------|-------|-------------|
+| BIP-39 seed + messaging key | hades-identity | `seed.rs` |
+| Account recovery | hades-identity | `recovery.rs` |
 | PQXDH key exchange | hades-crypto | `pqxdh.rs` |
 | Double Ratchet + SPQR | hades-crypto | `double_ratchet.rs` |
 | ChaCha20-Poly1305 AEAD | hades-crypto | `aead.rs` |
 | BLAKE3 fingerprints | hades-crypto | `fingerprint.rs` |
 | HKDF key derivation | hades-crypto | `kdf.rs` |
 | Sealed Sender v2 | hades-crypto | `sealed_sender_v2.rs` |
+| Sender key distribution | hades-crypto | `sender_keys.rs` |
 | Anti-forensics | hades-crypto | `anti_forensics.rs` |
 | MTU padding | hades-crypto | `padding.rs` |
+| Screenshot guard | hades-crypto | `screenshot_guard.rs` |
 | Cover traffic | hades-onion | `cover_traffic.rs` |
 | Pluggable transports | hades-onion | `pluggable_transport.rs` |
 | Bridge rotation | hades-onion | `bridge_rotation.rs` |
 | Onion encryption | hades-onion | `onion_encrypt.rs` |
 | Anonymous credentials | hades-identity | `anonymous_credentials.rs` |
 | Identity management | hades-identity | `identity.rs` |
+| HD wallet derivation | hades-wallet | `hd.rs` |
+| Bitcoin transactions | hades-wallet | `chains/bitcoin.rs` |
+| Ethereum transactions | hades-wallet | `chains/ethereum.rs` |
+| Solana transactions | hades-wallet | `chains/solana.rs` |
+| Multi-chain RPC | hades-wallet | `rpc.rs` |
+| Transaction service | hades-wallet | `transaction.rs` |
+| Relay authentication | hades-relay | `auth.rs` |
+| Message routing | hades-relay | `router.rs` |
 
 For the threat model and adversary analysis, see [THREAT_MODEL.md](THREAT_MODEL.md).

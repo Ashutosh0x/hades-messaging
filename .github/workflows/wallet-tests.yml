@@ -1,0 +1,46 @@
+name: Wallet Tests
+
+on:
+  push:
+    paths:
+      - 'crates/hades-wallet/**'
+      - 'src-tauri/src/wallet_commands.rs'
+  pull_request:
+    paths:
+      - 'crates/hades-wallet/**'
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            target/
+          key: ${{ runner.os }}-cargo-wallet-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run wallet unit tests
+        run: cargo test --package hades-wallet -- --nocapture
+
+      - name: Run wallet integration tests (testnet)
+        env:
+          WALLET_TEST_MNEMONIC: ${{ secrets.WALLET_TEST_MNEMONIC }}
+        run: cargo test --package hades-wallet --test integration -- --nocapture
+        if: env.WALLET_TEST_MNEMONIC != ''
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Clippy check
+        run: cargo clippy --package hades-wallet -- -D warnings

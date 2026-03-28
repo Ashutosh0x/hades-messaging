@@ -6,6 +6,9 @@ import { useConversationStore } from '../store/conversationStore'
 import MessageBubble from '../components/MessageBubble'
 import ReplyPreview from '../components/ReplyPreview'
 import VoiceRecorder from '../components/VoiceRecorder'
+import InChatSendSheet from '../components/InChatSendSheet'
+import CryptoTransferBubble from '../components/CryptoTransferBubble'
+import { CryptoTransferMessage } from '../types/wallet'
 import {
   ArrowLeft, ShieldCheck, FileArchive, Paperclip, Smile, Send,
   Phone, Video, Timer, Mic,
@@ -24,6 +27,7 @@ export default function Conversation() {
 
   const [inputText, setInputText] = useState('')
   const [isRecording, setIsRecording] = useState(false)
+  const [showCryptoSheet, setShowCryptoSheet] = useState(false)
 
   useEffect(() => {
     if (conversationId) {
@@ -43,6 +47,15 @@ export default function Conversation() {
     else if (convo.ttlConfig === 86400) nextTtl = 604800 // 1 week
     else nextTtl = undefined // Off
     setConversationTtl(convo.id, nextTtl)
+  }
+
+  // Check if a message is a crypto transfer
+  const isCryptoTransfer = (content: string): CryptoTransferMessage | null => {
+    try {
+      const parsed = JSON.parse(content)
+      if (parsed.type === 'crypto_transfer') return parsed as CryptoTransferMessage
+    } catch { /* not JSON */ }
+    return null
   }
 
   return (
@@ -82,9 +95,19 @@ export default function Conversation() {
           <span>{t('conversation.today')}, 14:23</span>
         </div>
 
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
+        {messages.map((msg) => {
+          const transfer = isCryptoTransfer(msg.text || '')
+          if (transfer) {
+            return (
+              <CryptoTransferBubble
+                key={msg.id}
+                transfer={transfer}
+                isMine={msg.sent}
+              />
+            )
+          }
+          return <MessageBubble key={msg.id} message={msg} />
+        })}
       </div>
 
       {/* Input Area */}
@@ -101,7 +124,6 @@ export default function Conversation() {
         {isRecording ? (
           <VoiceRecorder 
             onSend={(blob) => {
-              // Simulate handling Opus audio packet send
               setIsRecording(false)
             }} 
             onCancel={() => setIsRecording(false)} 
@@ -122,6 +144,15 @@ export default function Conversation() {
             <button className="input-action" aria-label={t('common.emoji')}>
               <Smile size={ICON_SIZE.md} color="var(--text-secondary)" />
             </button>
+            {/* Crypto Send Button */}
+            <button
+              className="input-action crypto-send-action"
+              onClick={() => setShowCryptoSheet(true)}
+              title="Send crypto"
+              aria-label="Send crypto"
+            >
+              💰
+            </button>
             <button 
               className={`send-btn ${!inputText.trim() ? 'mic-mode' : ''}`} 
               aria-label={inputText.trim() ? t('common.sendMessage') : "Record Voice Message"}
@@ -129,7 +160,6 @@ export default function Conversation() {
                 if (!inputText.trim()) {
                   setIsRecording(true)
                 } else {
-                  // Send text message (stub)
                   setInputText('')
                 }
               }}
@@ -143,6 +173,14 @@ export default function Conversation() {
           </div>
         )}
       </div>
+
+      {/* Crypto Send Sheet */}
+      <InChatSendSheet
+        isOpen={showCryptoSheet}
+        onClose={() => setShowCryptoSheet(false)}
+        conversationId={conversationId ?? ''}
+        contactName={displayName}
+      />
     </div>
   )
 }

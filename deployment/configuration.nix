@@ -3,9 +3,8 @@
 # Deploy with:
 #   nixos-rebuild switch --flake .#hades-relay
 #
-# This configuration produces a minimal, hardened relay server
-# with full disk encryption, AppArmor, Tor hidden service,
-# and zero persistent user data.
+# Hardened relay server with full disk encryption, AppArmor,
+# Tor hidden service, Caddy reverse proxy, and zero persistent user data.
 
 { config, pkgs, ... }:
 
@@ -16,7 +15,6 @@
   ];
 
   # ── System ──────────────────────────────────────────────────────
-
   system.stateVersion = "24.11";
 
   boot = {
@@ -30,7 +28,6 @@
       allowDiscards = true;
     };
 
-    # Kernel hardening
     kernelParams = [
       "slab_nomerge"
       "init_on_alloc=1"
@@ -41,50 +38,111 @@
   };
 
   # ── Packages (minimal surface) ─────────────────────────────────
-
   environment.systemPackages = with pkgs; [
-    hades-relay   # The Hades relay binary (built from crates/hades-relay)
+    hades-relay
     tor
-    coturn        # Self-hosted TURN for E2EE calls
+    coturn
     htop
     tmux
   ];
 
-  # ── Security ───────────────────────────────────────────────────
-
-  security = {
-    lockKernelModules = true;
-    protectKernelImage = true;
-    allowSimultaneousMultithreading = false;   # Mitigate Spectre
-    forcePageTableIsolation = true;            # KPTI
-
-    apparmor = {
-      enable = true;
-    };
-
-    # Prevent core dumps
-    pam.loginLimits = [
-      { domain = "*"; type = "hard"; item = "core"; value = "0"; }
-    ];
-  };
-
-  # ── Firewall ───────────────────────────────────────────────────
-
+  # ── Networking ─────────────────────────────────────────────────
   networking = {
     hostName = "hades-relay";
 
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 443 ];   # HTTPS / Onion service only
-      allowedUDPPorts = [ ];       # No UDP unless TURN is enabled
+      allowedTCPPorts = [ 443 22 ];
+      allowedUDPPorts = [ ];
     };
 
-    # Force DNS over Tor
     nameservers = [ "127.0.0.1" ];
   };
 
-  # ── Tor Configuration ─────────────────────────────────────────
+  # ── Security ───────────────────────────────────────────────────
+  security = {
+    lockKernelModules = true;
+    protectKernelImage = true;
+    allowSimultaneousMultithreading = false;
+    forcePageTableIsolation = true;
 
+    apparmor.enable = true;
+
+    pam.loginLimits = [
+      { domain = "*"; type = "hard"; item = "core"; value = "0"; }
+    ];
+  };
+
+  # ── Hades Relay Service ────────────────────────────────────────
+  systemd.services.hades-relay = {
+    description = "Hades Messaging Relay";
+    after = [ "network.target" "tor.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "/opt/hades/bin/hades-relay";
+      User = "hades";
+      Group = "hades";
+      Restart = "always";
+      RestartSec = 5;
+
+      # Systemd hardening
+      DynamicUser = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      NoNewPrivileges = true;
+      PrivateDevices = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
+      MemoryDenyWriteExecute = true;
+      RestrictNamespaces = true;
+      RestrictRealtime = true;
+      LockPersonality = true;
+      SystemCallFilter = [ "@system-service" ];
+      CapabilityBoundingSet = "";
+
+      # Resource limits
+      LimitNOFILE = 65536;
+      MemoryMax = "512M";
+    };
+
+    environment = {
+      RUST_LOG = "info";
+      RELAY_BIND = "127.0.0.1";
+      RELAY_PORT = "8443";
+    };
+  };
+
+  users.users.hades = {
+    isSystemUser = true;
+    group = "hades";
+    home = "/var/lib/hades";
+    createHome = true;
+  };
+  users.groups.hades = {};
+
+  # ── Caddy reverse proxy with automatic HTTPS ──────────────────
+  services.caddy = {
+    enable = true;
+    virtualHosts."relay.hades.im" = {
+      extraConfig = ''
+        reverse_proxy localhost:8443
+
+        header {
+          Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options nosniff
+          X-Frame-Options DENY
+          Content-Security-Policy "default-src 'none'"
+          -Server
+        }
+      '';
+    };
+  };
+
+  # ── Tor Configuration ─────────────────────────────────────────
   services.tor = {
     enable = true;
     client.enable = false;
@@ -100,12 +158,10 @@
     };
 
     settings = {
-      # Onion service for the relay
       HiddenServiceDir = "/var/lib/tor/hades-service";
       HiddenServicePort = "443 127.0.0.1:8443";
       HiddenServiceVersion = 3;
 
-      # Vanguards v2 — multi-layer guard rotation
       HiddenServiceEnableIntroDoSDefense = true;
       HiddenServicePoWDefensesEnabled = true;
       HiddenServicePoWQueueRate = 250;
@@ -114,45 +170,7 @@
     };
   };
 
-  # ── Hades Relay Service ────────────────────────────────────────
-
-  systemd.services.hades-relay = {
-    description = "Hades Messaging Relay";
-    after = [ "network.target" "tor.service" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      ExecStart = "/opt/hades/bin/hades-relay";
-      User = "hades";
-      Group = "hades";
-      Restart = "always";
-      RestartSec = 5;
-
-      # Systemd hardening
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateTmp = true;
-      NoNewPrivileges = true;
-      PrivateDevices = true;
-      ProtectKernelTunables = true;
-      ProtectKernelModules = true;
-      ProtectControlGroups = true;
-      MemoryDenyWriteExecute = true;
-      RestrictRealtime = true;
-      LockPersonality = true;
-    };
-  };
-
-  users.users.hades = {
-    isSystemUser = true;
-    group = "hades";
-    home = "/var/lib/hades";
-    createHome = true;
-  };
-  users.groups.hades = {};
-
   # ── TURN Server (E2EE Voice/Video) ─────────────────────────────
-
   services.coturn = {
     enable = true;
     listening-port = 3478;
@@ -165,16 +183,32 @@
     denied-peer-ip = [ "0.0.0.0-0.255.255.255" "10.0.0.0-10.255.255.255" ];
   };
 
-  # ── Auto-updates ───────────────────────────────────────────────
+  # ── SSH hardening ──────────────────────────────────────────────
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
+      KbdInteractiveAuthentication = false;
+    };
+  };
 
+  # ── Fail2ban ───────────────────────────────────────────────────
+  services.fail2ban.enable = true;
+
+  # ── Monitoring ─────────────────────────────────────────────────
+  services.prometheus.exporters.node = {
+    enable = true;
+    enabledCollectors = [ "systemd" "processes" ];
+  };
+
+  # ── Auto-updates ───────────────────────────────────────────────
   system.autoUpgrade = {
     enable = true;
-    allowReboot = true;
-    dates = "03:00";
+    allowReboot = false;
   };
 
   # ── Logging (minimal) ─────────────────────────────────────────
-
   services.journald.extraConfig = ''
     SystemMaxUse=100M
     MaxRetentionSec=7d
