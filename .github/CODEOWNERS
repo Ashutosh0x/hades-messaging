@@ -1,0 +1,39 @@
+# =============================================================================
+# Hades Messaging — Code Owners
+# Defines required reviewers for security-critical paths
+# =============================================================================
+
+# Global owners — all PRs require review
+* @Ashutosh0x
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security-critical paths require explicit review
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Cryptographic primitives — PQXDH, Double Ratchet, Sealed Sender
+/crates/hades-crypto/ @Ashutosh0x
+
+# Identity and key management — key bundles, device sync
+/crates/hades-identity/ @Ashutosh0x
+
+# Tor integration — onion routing, cover traffic, pluggable transports
+/crates/hades-onion/ @Ashutosh0x
+
+# Relay server — message routing, session management
+/crates/hades-relay/ @Ashutosh0x
+
+# Protocol definitions
+/crates/hades-proto/ @Ashutosh0x
+
+# Infrastructure and deployment
+/deployment/ @Ashutosh0x
+
+# Security documentation
+/docs/CRYPTOGRAPHY.md @Ashutosh0x
+/docs/THREAT_MODEL.md @Ashutosh0x
+/SECURITY.md @Ashutosh0x
+
+# CI/CD pipelines
+/.github/workflows/ @Ashutosh0x
+/.github/dependabot.yml @Ashutosh0x
+/.github/CODEOWNERS @Ashutosh0x

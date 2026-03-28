@@ -1,4 +1,31 @@
+# Build outputs
 target/
 node_modules/
+dist/
+gen/
 *.log
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+*.keystore
+
+# Debug artifacts
+check.log
+common-check.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Tauri generated
+src-tauri/gen/
