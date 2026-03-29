@@ -46,7 +46,7 @@ prost = "0.13"
 prost-build = "0.13"
 
 # Networking & server
-axum = { version = "0.7", features = ["ws"] }
+axum = { version = "0.8", features = ["ws"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 rustls = "0.23"
