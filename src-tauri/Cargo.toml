@@ -24,7 +24,7 @@ hades-media = { path = "../crates/hades-media" }
 
 
 # Database
-rusqlite = { version = "0.31", features = ["bundled-sqlcipher", "vtab"] }
+rusqlite = { version = "0.39", features = ["bundled-sqlcipher", "vtab"] }
 
 # Async
 tokio = { version = "1", features = ["full"] }
