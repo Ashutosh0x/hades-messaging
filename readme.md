@@ -6,11 +6,11 @@ https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
 <p align="center">
   <a href="https://play.google.com/store/apps/details?id=im.hades.messaging">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
+    <img src="docs/assets/google-play-badge.png" alt="Get it on Google Play" height="56">
   </a>
   &nbsp;&nbsp;
   <a href="https://apps.apple.com/app/hades-messaging/idYOUR_APP_ID">
-    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="54">
+    <img src="docs/assets/app-store-badge.png" alt="Download on the App Store" height="56">
   </a>
 </p>
 
@@ -35,9 +35,7 @@ https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 [![Security Audit](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml)
 [![CodeQL](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Ashutosh0x/hades-messaging/badge)](https://scorecard.dev/viewer/?uri=github.com/Ashutosh0x/hades-messaging)
-[![Release — Android](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-android.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-android.yml)
-[![Release — iOS](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-ios.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-ios.yml)
-[![Release — Desktop](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-desktop.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-desktop.yml)
+[![Release](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml)
 
 </p>
 
