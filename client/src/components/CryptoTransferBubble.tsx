@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion'
 import { CHAIN_META, ChainId, CryptoTransferMessage } from '../types/wallet'
+import CryptoIcon from './CryptoIcon'
+import { CheckCircle, Clock, XCircle } from 'lucide-react'
 
 interface CryptoTransferBubbleProps {
   transfer: CryptoTransferMessage
@@ -19,9 +21,7 @@ export default function CryptoTransferBubble({
       animate={{ scale: 1, opacity: 1 }}
     >
       <div className="transfer-header">
-        <span className="transfer-chain-icon" style={{ color: meta.color }}>
-          {meta.icon}
-        </span>
+        <CryptoIcon chain={transfer.chain} size={22} />
         <span className="transfer-label">
           {isMine ? 'You sent' : 'Received'}
         </span>
@@ -37,9 +37,9 @@ export default function CryptoTransferBubble({
       <div className="transfer-meta">
         <span className="transfer-network">{meta.name}</span>
         <span className={`transfer-status ${transfer.status}`}>
-          {transfer.status === 'pending' && '⏳ Pending'}
-          {transfer.status === 'confirmed' && '✓ Confirmed'}
-          {transfer.status === 'failed' && '✗ Failed'}
+          {transfer.status === 'pending' && <><Clock size={11} /> Pending</>}
+          {transfer.status === 'confirmed' && <><CheckCircle size={11} /> Confirmed</>}
+          {transfer.status === 'failed' && <><XCircle size={11} /> Failed</>}
         </span>
       </div>
 

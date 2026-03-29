@@ -4,14 +4,46 @@
 https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
 
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=im.hades.messaging">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://apps.apple.com/app/hades-messaging/idYOUR_APP_ID">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="54">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Ashutosh0x/hades-messaging/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
+  </a>
+  <a href="https://github.com/Ashutosh0x/hades-messaging/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS">
+  </a>
+  <a href="https://github.com/Ashutosh0x/hades-messaging/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux">
+  </a>
+  <a href="https://github.com/Ashutosh0x/hades-messaging/releases/latest">
+    <img src="https://img.shields.io/badge/APK-Direct_Download-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Direct APK">
+  </a>
+</p>
+
+<p align="center">
 
 [![CI](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/ci.yml)
 [![Security Audit](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/security-audit.yml)
 [![CodeQL](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Ashutosh0x/hades-messaging/badge)](https://scorecard.dev/viewer/?uri=github.com/Ashutosh0x/hades-messaging)
-[![Release](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release.yml)
+[![Release — Android](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-android.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-android.yml)
+[![Release — iOS](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-ios.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-ios.yml)
+[![Release — Desktop](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-desktop.yml/badge.svg)](https://github.com/Ashutosh0x/hades-messaging/actions/workflows/release-desktop.yml)
+
+</p>
 
 **True end-to-end encrypted messaging with zero metadata leakage**
+
+> **Download:** [Google Play](https://play.google.com/store/apps/details?id=im.hades.messaging) · [App Store](https://apps.apple.com/app/hades-messaging/idYOUR_APP_ID) · [Desktop](https://github.com/Ashutosh0x/hades-messaging/releases/latest) · [Direct APK](https://github.com/Ashutosh0x/hades-messaging/releases/latest)
 
 Hades is a sovereign, privacy-first messaging application that implements state-of-the-art cryptographic protocols including post-quantum secure key exchange (PQXDH), Double Ratchet with SPQR, forced onion routing via Tor, and a built-in multi-chain HD wallet — all governed by a single BIP-39 seed phrase. Unlike traditional messengers, Hades ensures that even the server infrastructure learns nothing about your communications.
 
@@ -285,8 +317,12 @@ hades-messaging/
 │   └── deploy.sh                    # Deployment automation
 │
 ├── docs/                            # Technical documentation
+│   ├── assets/                      # Documentation assets
+│   │   ├── google-play-badge.png    #   Google Play download badge
+│   │   └── app-store-badge.png      #   Apple App Store download badge
 │   ├── ARCHITECTURE.md              # 23+ Mermaid diagrams with protocol details
 │   ├── CRYPTOGRAPHY.md              # Protocol spec with 2026 bibliography
+│   ├── INSTALLATION.md              # Download links + platform install guides
 │   └── THREAT_MODEL.md              # 6 adversary classes, 30+ mitigations
 │
 ├── .github/                         # CI/CD and repository governance
@@ -619,6 +655,7 @@ Hades is designed to run without a single cloud provider.
 
 | Document | Contents |
 |----------|----------|
+| [INSTALLATION.md](docs/INSTALLATION.md) | Download links (Google Play, App Store, Desktop), platform requirements, APK verification, build from source, reproducible builds, troubleshooting |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 23+ Mermaid diagrams: system overview, client architecture, crate graph, component tree, PQXDH, Double Ratchet, Sealed Sender v2, message lifecycle, Tor circuits, cover traffic, identity management, Sesame sync, anti-forensics, deployment, state machines, CI/CD pipeline, threat model, data flow, key hierarchy |
 | [CRYPTOGRAPHY.md](docs/CRYPTOGRAPHY.md) | 16-algorithm protocol table, PQXDH, Double Ratchet, MLS, AKD, SimplePIR, Sealed Sender v2, BIP-39/BIP-32 HD derivation, 2026 research bibliography |
 | [THREAT_MODEL.md](docs/THREAT_MODEL.md) | 6 adversary classes (GPA, active network, server compromise, endpoint, quantum, legal), 30+ mitigations with implementation status |

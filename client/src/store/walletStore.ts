@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
 import type {
   AccountInfo,
   BalanceResult,
@@ -8,6 +7,16 @@ import type {
   SendRequest,
   WalletTx,
 } from '../types/wallet';
+
+// Helper: try to invoke Tauri command, return fallback if not in Tauri context
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke<T>(cmd, args);
+  } catch {
+    return null;
+  }
+}
 
 interface WalletState {
   // State
@@ -51,20 +60,22 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   initWallet: async () => {
     set({ loading: true, error: null });
     try {
-      const result = await invoke<{
+      const result = await tryInvoke<{
         accounts: AccountInfo[];
         mnemonic: string | null;
       }>('wallet_init');
 
-      set({
-        initialized: true,
-        accounts: result.accounts,
-        mnemonic: result.mnemonic,
-        loading: false,
-      });
-
-      // Auto-fetch balances after init
-      get().fetchAllBalances();
+      if (result) {
+        set({
+          initialized: true,
+          accounts: result.accounts,
+          mnemonic: result.mnemonic,
+          loading: false,
+        });
+        get().fetchAllBalances();
+      } else {
+        set({ loading: false });
+      }
     } catch (err) {
       set({ error: String(err), loading: false });
     }
@@ -73,18 +84,21 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   importWallet: async (mnemonic: string) => {
     set({ loading: true, error: null });
     try {
-      const result = await invoke<{
+      const result = await tryInvoke<{
         accounts: AccountInfo[];
         mnemonic: string | null;
       }>('wallet_import', { mnemonic });
 
-      set({
-        initialized: true,
-        accounts: result.accounts,
-        loading: false,
-      });
-
-      get().fetchAllBalances();
+      if (result) {
+        set({
+          initialized: true,
+          accounts: result.accounts,
+          loading: false,
+        });
+        get().fetchAllBalances();
+      } else {
+        set({ loading: false });
+      }
     } catch (err) {
       set({ error: String(err), loading: false });
     }
@@ -92,7 +106,8 @@ export const useWalletStore = create<WalletState>((set, get) => ({
 
   fetchAllBalances: async () => {
     try {
-      const results = await invoke<BalanceResult[]>('wallet_get_all_balances');
+      const results = await tryInvoke<BalanceResult[]>('wallet_get_all_balances');
+      if (!results) return;
       const balances: Record<string, BalanceResult> = {};
       let total = 0;
 
@@ -109,10 +124,12 @@ export const useWalletStore = create<WalletState>((set, get) => ({
 
   fetchBalance: async (chain: ChainId) => {
     try {
-      const result = await invoke<BalanceResult>('wallet_get_balance', { chain });
-      set((state) => ({
-        balances: { ...state.balances, [chain]: result },
-      }));
+      const result = await tryInvoke<BalanceResult>('wallet_get_balance', { chain });
+      if (result) {
+        set((state) => ({
+          balances: { ...state.balances, [chain]: result },
+        }));
+      }
     } catch (err) {
       console.error(`Failed to fetch ${chain} balance:`, err);
     }
@@ -121,14 +138,15 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   sendCrypto: async (req: SendRequest) => {
     set({ sending: true, error: null });
     try {
-      const result = await invoke<{
+      const result = await tryInvoke<{
         txHash: string;
         explorerUrl: string;
         status: string;
         messageId: string | null;
       }>('wallet_send', { request: req });
 
-      // Refresh balance after send
+      if (!result) throw new Error('Wallet not available in browser mode');
+
       get().fetchBalance(req.chain);
       get().fetchTransactions();
 
@@ -146,27 +164,31 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   },
 
   estimateGas: async (chain, to, amount) => {
-    return invoke<GasEstimate>('wallet_estimate_gas', { chain, to, amount });
+    const result = await tryInvoke<GasEstimate>('wallet_estimate_gas', { chain, to, amount });
+    if (!result) throw new Error('Wallet not available in browser mode');
+    return result;
   },
 
   fetchTransactions: async (chain?: ChainId) => {
     try {
-      const txs = await invoke<WalletTx[]>('wallet_get_transactions', {
+      const txs = await tryInvoke<WalletTx[]>('wallet_get_transactions', {
         chain: chain ?? null,
         limit: 100,
       });
-      set({ transactions: txs });
+      if (txs) set({ transactions: txs });
     } catch (err) {
       console.error('Failed to fetch transactions:', err);
     }
   },
 
   getAddress: async (chain: ChainId) => {
-    return invoke<string>('wallet_get_address', { chain });
+    const result = await tryInvoke<string>('wallet_get_address', { chain });
+    return result ?? '';
   },
 
   exportMnemonic: async () => {
-    return invoke<string>('wallet_export_mnemonic');
+    const result = await tryInvoke<string>('wallet_export_mnemonic');
+    return result ?? '';
   },
 
   setSelectedChain: (chain) => set({ selectedChain: chain }),

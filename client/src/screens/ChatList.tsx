@@ -9,7 +9,7 @@ import MessageStatus from '../components/MessageStatus'
 import SecureRouteIndicator from '../components/SecureRouteIndicator'
 import {
   ShieldCheck, Search, Plus, MessageSquare, Users, Settings as SettingsIcon,
-  Phone, ICON_SIZE, ICON_STROKE,
+  Phone, Wallet, ICON_SIZE, ICON_STROKE,
 } from '../ui/icons'
 import ActionSheet from './ActionSheet'
 import AppLock from './AppLock'
@@ -66,9 +66,14 @@ export default function ChatList() {
         </div>
         <div className="header-title-row">
           <h1 className="header-title">{t('chatList.appTitle')}</h1>
-          <button className="header-badge" aria-label={t('security.securityBadge')}>
-            <ShieldCheck size={ICON_SIZE.sm} color="var(--accent-secure)" />
-          </button>
+          <div className="header-actions-row">
+            <button className="header-badge wallet-badge" onClick={() => navigate(ROUTES.WALLET)} aria-label="Wallet">
+              <Wallet size={ICON_SIZE.sm} color="var(--accent-secure)" />
+            </button>
+            <button className="header-badge" aria-label={t('security.securityBadge')}>
+              <ShieldCheck size={ICON_SIZE.sm} color="var(--accent-secure)" />
+            </button>
+          </div>
         </div>
       </header>
 

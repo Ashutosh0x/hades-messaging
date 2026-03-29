@@ -119,6 +119,110 @@ const MIGRATIONS: &[&str] = &[
         PRIMARY KEY (group_id, member_id)
     );
     "#,
+    // v6: Call history (Q1 fix) -> delegated to call.rs
+    super::call::CALLS_MIGRATION,
+    // v7: Attachment chunking (WhatsApp-style media parts)
+    super::attachments::ATTACHMENTS_MIGRATION,
+    // v8: WhatsApp-level schema completeness + performance indexes
+    r#"
+    -- FTS5 auto-update triggers (auto-index on message insert/delete/update)
+    CREATE TRIGGER IF NOT EXISTS fts_insert AFTER INSERT ON messages BEGIN
+        INSERT INTO messages_fts(message_id, search_tokens)
+        VALUES (new.id, '');
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS fts_delete AFTER DELETE ON messages BEGIN
+        INSERT INTO messages_fts(messages_fts, message_id, search_tokens)
+        VALUES ('delete', old.id, '');
+    END;
+
+    -- Conversation statistics cache (O(1) badge counts + preview)
+    CREATE TABLE IF NOT EXISTS conversation_stats (
+        conversation_id TEXT PRIMARY KEY,
+        message_count INTEGER NOT NULL DEFAULT 0,
+        media_count INTEGER NOT NULL DEFAULT 0,
+        unread_count INTEGER NOT NULL DEFAULT 0,
+        last_message_timestamp TEXT,
+        first_message_timestamp TEXT,
+        total_bytes INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Message edits (WhatsApp edit feature)
+    CREATE TABLE IF NOT EXISTS message_edits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id TEXT NOT NULL,
+        edit_version INTEGER NOT NULL,
+        previous_content BLOB,
+        edited_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
+    );
+
+    -- Dedicated message receipts (delivery + read)
+    CREATE TABLE IF NOT EXISTS message_receipts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id TEXT NOT NULL,
+        recipient_id TEXT NOT NULL,
+        receipt_type TEXT NOT NULL,
+        timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(message_id, recipient_id, receipt_type),
+        FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
+    );
+
+    -- Draft messages (unsent draft per conversation)
+    CREATE TABLE IF NOT EXISTS message_drafts (
+        conversation_id TEXT PRIMARY KEY,
+        draft_text TEXT,
+        draft_attachments TEXT,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Starred messages
+    CREATE TABLE IF NOT EXISTS starred_messages (
+        message_id TEXT PRIMARY KEY,
+        starred_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE
+    );
+
+    -- Pinned conversations
+    CREATE TABLE IF NOT EXISTS pinned_conversations (
+        conversation_id TEXT PRIMARY KEY,
+        pin_order INTEGER NOT NULL DEFAULT 0,
+        pinned_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Muted conversations
+    CREATE TABLE IF NOT EXISTS muted_conversations (
+        conversation_id TEXT PRIMARY KEY,
+        muted_until INTEGER NOT NULL,
+        muted_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Archived conversations
+    CREATE TABLE IF NOT EXISTS archived_conversations (
+        conversation_id TEXT PRIMARY KEY,
+        archived_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Performance indexes
+    CREATE INDEX IF NOT EXISTS idx_messages_unread
+        ON messages(conversation_id, status)
+        WHERE status != 'read' AND sender_id != 'self';
+
+    CREATE INDEX IF NOT EXISTS idx_messages_burn
+        ON messages(burn_after)
+        WHERE burn_after IS NOT NULL AND is_deleted = 0;
+
+    CREATE INDEX IF NOT EXISTS idx_call_history_contact
+        ON call_history(contact_id, timestamp DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_receipts_message
+        ON message_receipts(message_id);
+
+    -- SQLite performance tuning
+    PRAGMA auto_vacuum = INCREMENTAL;
+    PRAGMA mmap_size = 268435456;
+    "#,
 ];
 
 pub fn run_all(conn: &Connection) -> AppResult<()> {

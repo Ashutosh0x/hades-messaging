@@ -112,3 +112,40 @@ message DeviceEvent {
   uint32 device_id = 1;
   string event_type = 2; // "added", "removed", "key_changed"
 }
+
+// ── Calls ──
+
+message CallMessage {
+  uint64 id = 1;
+  bytes conversation_id = 2;
+  uint64 timestamp = 3;
+  uint64 start_time = 4;
+  uint64 end_time = 5;
+  int32 call_type = 6;
+  int32 direction = 7;
+  int32 status = 8;
+  int32 duration = 9;
+  string local_address = 10;
+  string remote_address = 11;
+  bytes extra_data = 12;
+  string body = 13;
+}
+
+message CallSetup {
+  bytes ephemeral_key = 1;
+  bytes call_id = 2;
+  bytes user_id = 3;
+  ServerConfig server_config = 4;
+  WireFormat key_exchange = 5;
+}
+
+message ServerConfig {
+  string turn_server = 1;
+  string stun_servers = 2;
+  bool requires_turn = 3;
+}
+
+message WireFormat {
+  int32 protocol = 1; // 0 for WIRE_V2
+  bytes extra_info = 2;
+}

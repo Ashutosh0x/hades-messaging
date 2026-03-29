@@ -192,6 +192,22 @@ impl MessagingKeypair {
         self.ed25519_public.verify(data, &sig).is_ok()
     }
 
+    /// Return the raw X25519 secret key bytes for decryption operations.
+    ///
+    /// Derives the clamped scalar from the Ed25519 signing key using the same
+    /// SHA-512 → clamp transformation used during construction. The returned
+    /// bytes are suitable for use with `x25519_dalek::StaticSecret::from()`.
+    pub fn x25519_secret_bytes(&self) -> [u8; 32] {
+        let hash = sha2::Sha512::digest(&self.ed25519_signing.to_bytes());
+        let mut secret = [0u8; 32];
+        secret.copy_from_slice(&hash[..32]);
+        // Clamp per curve25519 specification
+        secret[0] &= 248;
+        secret[31] &= 127;
+        secret[31] |= 64;
+        secret
+    }
+
     /// Compute safety number with a contact (Signal-style, for verification).
     ///
     /// The safety number is deterministic and identical regardless of which

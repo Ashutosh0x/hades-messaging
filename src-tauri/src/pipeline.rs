@@ -229,10 +229,17 @@ pub async fn incoming_message_loop(
                 ..
             }) => {
                 let mut s = state.write().await;
-                let identity_x25519_bytes = {
-                    match &s.messaging_keypair {
-                        Some(kp) => *kp.x25519_public.as_bytes(),
-                        None => continue,
+
+                // ── C1 FIX: Extract REAL X25519 secret from MessagingKeypair ──
+                let (our_x25519_secret, our_x25519_public) = match &s.messaging_keypair {
+                    Some(kp) => {
+                        let secret_bytes = kp.x25519_secret_bytes();
+                        let public_bytes = *kp.x25519_public.as_bytes();
+                        (secret_bytes, public_bytes)
+                    }
+                    None => {
+                        log::error!("No messaging keypair — cannot decrypt incoming messages");
+                        continue;
                     }
                 };
 
@@ -240,25 +247,21 @@ pub async fn incoming_message_loop(
                 let contact_ids: Vec<String> = s.sessions.keys().cloned().collect();
                 for contact_id in &contact_ids {
                     if let Some(session) = s.sessions.get_mut(contact_id) {
-                        // Use the x25519 secret bytes directly — we need a way to access them.
-                        // For now, we use a placeholder 32-byte key. In production, store
-                        // the x25519 secret in the database.
-                        let our_secret = [0u8; 32]; // TODO: store & retrieve x25519 secret
                         match decrypt_message(
                             session,
                             &envelope,
-                            &our_secret,
-                            &identity_x25519_bytes,
+                            &our_x25519_secret,
+                            &our_x25519_public,
                         ) {
                             Ok((plaintext_msg, sender_pubkey)) => {
                                 let decrypted = DecryptedMessage {
                                     id: plaintext_msg.id.clone(),
                                     conversation_id: contact_id.clone(),
                                     sender_id: hex::encode(sender_pubkey),
-                                    content: plaintext_msg.content,
-                                    timestamp: plaintext_msg.timestamp,
+                                    content: plaintext_msg.content.clone(),
+                                    timestamp: plaintext_msg.timestamp.clone(),
                                     burn_after: plaintext_msg.burn_after,
-                                    reply_to: plaintext_msg.reply_to,
+                                    reply_to: plaintext_msg.reply_to.clone(),
                                 };
 
                                 // Store in database
@@ -275,6 +278,22 @@ pub async fn incoming_message_loop(
                                         reply_to: decrypted.reply_to.clone(),
                                     };
                                     let _ = db::messages::insert_message(db.conn(), &stored);
+
+                                    // ── S7 FIX: Index for FTS search ──
+                                    let _ = crate::search::index_message(
+                                        db.conn(),
+                                        &decrypted.id,
+                                        &decrypted.content,
+                                    );
+
+                                    // Persist updated session state
+                                    if let Ok(session_bytes) = serde_json::to_vec(session) {
+                                        let _ = db::sessions::save_session(
+                                            db.conn(),
+                                            contact_id,
+                                            &session_bytes,
+                                        );
+                                    }
                                 }
 
                                 // Emit event to frontend
@@ -285,6 +304,10 @@ pub async fn incoming_message_loop(
                         }
                     }
                 }
+
+                // Zeroize the extracted secret after use
+                let mut secret_copy = our_x25519_secret;
+                zeroize::Zeroize::zeroize(&mut secret_copy);
             }
             Some(RelayMessage::Receipt {
                 message_id,

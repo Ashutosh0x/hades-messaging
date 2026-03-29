@@ -13,8 +13,17 @@ import {
   Flame, Trash2, Bell, Timer, ChevronRight, Ban, Key, UserRound, AlertTriangle,
   ICON_SIZE, ICON_STROKE,
 } from '../ui/icons'
-import { invoke } from '@tauri-apps/api/core'
 import './Settings.css'
+
+// Safe invoke wrapper — no crash in browser dev mode
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    return await invoke<T>(cmd, args)
+  } catch {
+    return null
+  }
+}
 
 /** Cycle-through picker values */
 const CLIPBOARD_OPTIONS: ClipboardTimeout[] = ['1 min', '3 min', '5 min', '10 min', 'Never']
@@ -118,10 +127,10 @@ export default function Settings() {
   const handleConfirmDangerAction = () => {
     if (confirmAction === 'wipe') {
       addToast('Emergency wipe initiated — all local data destroyed', 'warning')
-      invoke('hades_anti_forensics_wipe').catch(console.error)
+      tryInvoke('emergency_wipe').catch(console.error)
     } else if (confirmAction === 'delete') {
       addToast('Account deletion requested — keys revoked', 'warning')
-      invoke('hades_identity_delete_account').catch(console.error)
+      tryInvoke('emergency_wipe').catch(console.error) // Uses the same wipe command
     }
     setConfirmAction(null)
   }

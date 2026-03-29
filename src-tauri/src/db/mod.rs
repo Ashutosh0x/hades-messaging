@@ -1,3 +1,5 @@
+pub mod attachments;
+pub mod call;
 pub mod contacts;
 pub mod keys;
 pub mod messages;

@@ -1,12 +1,15 @@
 mod auth;
+mod background_sync;
 mod biometric;
 mod burn_timer;
 #[path = "commands.rs"]
 mod legacy_commands;
+mod call_signaling;
 mod contacts;
 mod db;
 mod error;
 mod media;
+mod message_queue;
 mod notifications;
 mod pipeline;
 mod receipts;
@@ -72,6 +75,9 @@ pub fn run() {
             legacy_commands::initialize_database,
             legacy_commands::lock_database,
             legacy_commands::unlock_database,
+            // KV Store
+            legacy_commands::kv_get,
+            legacy_commands::kv_set,
             // Network
             legacy_commands::connect_relay,
             legacy_commands::disconnect_relay,
@@ -84,6 +90,23 @@ pub fn run() {
             // Device management
             legacy_commands::get_devices,
             legacy_commands::revoke_device,
+            // Search
+            legacy_commands::search_messages_command,
+            // Call history & Signaling
+            legacy_commands::get_call_history,
+            call_signaling::send_call_offer,
+            call_signaling::send_call_answer,
+            call_signaling::send_call_ice_candidate,
+            call_signaling::get_call_history,
+            call_signaling::delete_call_history,
+            // ─── Conversation Management ────────────────────────
+            burn_timer::burn_conversation,
+            legacy_commands::save_draft,
+            legacy_commands::get_draft,
+            legacy_commands::toggle_star_message,
+            legacy_commands::toggle_pin_conversation,
+            legacy_commands::toggle_mute_conversation,
+            legacy_commands::toggle_archive_conversation,
             // Wallet
             wallet_commands::wallet_init,
             wallet_commands::wallet_import,
@@ -94,6 +117,7 @@ pub fn run() {
             wallet_commands::wallet_get_address,
             wallet_commands::wallet_get_all_addresses,
             wallet_commands::wallet_estimate_fee,
+            wallet_commands::wallet_estimate_gas,
             wallet_commands::wallet_export_mnemonic,
             // Biometric
             biometric::biometric_available,
@@ -118,10 +142,17 @@ pub fn run() {
             }
 
             // Start burn timer background task
-            let state_clone = app_state.clone();
-            let handle = app.handle().clone();
+            let burn_state = app_state.clone();
+            let burn_handle = app.handle().clone();
             tokio::spawn(async move {
-                burn_timer::burn_timer_loop(state_clone, handle).await;
+                burn_timer::burn_timer_loop(burn_state, burn_handle).await;
+            });
+
+            // Start background sync (message retry + queue drain)
+            let sync_state = app_state.clone();
+            let sync_handle = app.handle().clone();
+            tokio::spawn(async move {
+                background_sync::sync_loop(sync_state, sync_handle).await;
             });
 
             Ok(())
@@ -129,3 +160,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running Hades");
 }
+

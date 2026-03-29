@@ -1,0 +1,14 @@
+{
+  "productName": "Hades",
+  "version": "1.0.0",
+  "bundle": {
+    "android": {
+      "minSdkVersion": 26
+    }
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' wss://relay.hades.im https://relay.hades.im; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; media-src 'self' blob:"
+    }
+  }
+}

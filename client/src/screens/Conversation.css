@@ -32,6 +32,10 @@
 .conv-header-name {
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 .conv-header-actions {

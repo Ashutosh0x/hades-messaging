@@ -14,6 +14,7 @@ import {
   Phone, Video, Timer, Mic,
   ICON_SIZE, ICON_STROKE,
 } from '../ui/icons'
+import { Coins } from 'lucide-react'
 import './Conversation.css'
 
 export default function Conversation() {
@@ -151,7 +152,7 @@ export default function Conversation() {
               title="Send crypto"
               aria-label="Send crypto"
             >
-              💰
+              <Coins size={ICON_SIZE.md} color="var(--accent-secure)" />
             </button>
             <button 
               className={`send-btn ${!inputText.trim() ? 'mic-mode' : ''}`} 

@@ -7,8 +7,13 @@ import {
   ArrowLeft, ScanLine, Type, Clipboard, UserPlus, ShieldCheck, QrCode,
   ICON_SIZE, ICON_STROKE,
 } from '../ui/icons'
-import { invoke } from '@tauri-apps/api/core'
 import './AddContact.css'
+
+// Safe invoke wrapper
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  return invoke<T>(cmd, args)
+}
 
 type InputMode = 'scan' | 'manual'
 
@@ -34,20 +39,20 @@ export default function AddContact() {
     if (ok) lookupIdentity(cleaned)
   }
 
-  /* ── Identity lookup (Rust: invoke('get_identity_metadata', …)) ── */
+  /* ── Identity lookup ── */
   const lookupIdentity = async (key: string) => {
     try {
       type IdentityMetadata = { name: string; id: string; fingerprint: string }
-      const meta = await invoke<IdentityMetadata>('get_identity_metadata', { publicKey: key })
+      const meta = await tryInvoke<IdentityMetadata>('add_contact_from_bundle', { bundle: key })
       setIdentityFound(meta)
       HapticManager.notification('success')
     } catch (err) {
-      console.error("Failed to lookup identity via Tauri:", err)
-      // Fallback for browser dev mode
+      console.error('Failed to lookup identity:', err)
+      // Show the public key with no mock data
       setIdentityFound({
         name: 'Unknown Identity',
         id: key.substring(0, 16) + '…',
-        fingerprint: '3A 7F 2B 9C 4E 1D 8B 5A 0F E2',
+        fingerprint: 'Verify in person',
       })
       HapticManager.notification('success')
     }
@@ -66,13 +71,16 @@ export default function AddContact() {
   /* ── Add to vault ── */
   const handleAdd = async () => {
     try {
-      await invoke('save_contact', { publicKey: inputKey, verified: false })
+      await tryInvoke('add_contact', {
+        contactId: inputKey,
+        displayName: identityFound?.name || 'Unknown',
+        identityKey: Array.from(new TextEncoder().encode(inputKey)),
+      })
       HapticManager.notification('success')
       navigate(-1)
     } catch (err) {
-      console.error("Failed to save contact via Tauri:", err)
-      HapticManager.notification('success')
-      navigate(-1)
+      console.error('Failed to save contact:', err)
+      HapticManager.notification('error')
     }
   }
 

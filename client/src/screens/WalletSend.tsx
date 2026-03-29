@@ -3,7 +3,9 @@ import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useWalletStore } from '../store/walletStore'
 import TokenSelector from '../components/TokenSelector'
+import CryptoIcon from '../components/CryptoIcon'
 import { CHAIN_META, ChainId, GasEstimate } from '../types/wallet'
+import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
 import './Wallet.css'
 
 export default function WalletSend() {
@@ -74,7 +76,9 @@ export default function WalletSend() {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
-          <div className="success-icon">✓</div>
+          <div className="success-icon">
+            <CheckCircle size={32} color="var(--accent-secure)" />
+          </div>
           <h2>Transaction Sent</h2>
           <p className="tx-hash">
             {txResult.txHash.slice(0, 12)}...{txResult.txHash.slice(-8)}
@@ -102,7 +106,9 @@ export default function WalletSend() {
     <div className="wallet-send-screen">
       {/* Header */}
       <div className="send-header">
-        <button className="wallet-back-btn" onClick={() => navigate(-1)}>←</button>
+        <button className="wallet-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={18} />
+        </button>
         <h2>Send {meta.ticker}</h2>
         <div />
       </div>
@@ -112,14 +118,14 @@ export default function WalletSend() {
         className="chain-selector-btn"
         onClick={() => setShowChainPicker(true)}
       >
-        <span style={{ color: meta.color }}>{meta.icon}</span>
+        <CryptoIcon chain={selectedChain} size={22} />
         <span>{meta.name}</span>
         <span className="chevron">▾</span>
       </button>
 
       {showChainPicker && (
         <TokenSelector
-          onSelect={(chain) => {
+          onSelect={(chain: ChainId) => {
             setSelectedChain(chain)
             setShowChainPicker(false)
           }}
@@ -246,8 +252,9 @@ export default function WalletSend() {
                 <motion.span
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity }}
+                  style={{ display: 'inline-block' }}
                 >
-                  ⟳
+                  <Loader2 size={18} />
                 </motion.span>
               ) : (
                 'Confirm & Send'

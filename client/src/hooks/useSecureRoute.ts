@@ -1,13 +1,12 @@
 import { useCallback, useRef } from 'react'
 import { useConnectionStore } from '../store/connectionStore'
 import { CONNECTION_STAGES } from '../types/connection'
-import { invoke } from '@tauri-apps/api/core'
 
 /**
  * Hook that drives the secure route establishment flow.
  * Each stage maps 1:1 to a real backend operation.
  * In production, each step awaits a Tauri command from the Rust backend.
- * Here we simulate with natural timing jitter.
+ * In browser-only mode, we simulate with natural timing jitter.
  */
 export function useSecureRoute() {
   const { setConnecting, updateProgress, setEstablished, setError, reset } = useConnectionStore()
@@ -21,10 +20,10 @@ export function useSecureRoute() {
       if (abortRef.current) return
 
       try {
+        const { invoke } = await import('@tauri-apps/api/core')
         await invoke('hades_onion_await_stage', { stage: stage.progress })
-      } catch (err) {
-        // Fallback or dev mode simulated jitter
-        if (!String(err).includes('Tauri')) console.error("Secure route error:", err)
+      } catch {
+        // Fallback: simulated jitter for browser-only mode
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 400 + Math.random() * 500)
         })

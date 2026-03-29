@@ -80,7 +80,7 @@ export const CHAIN_META: Record<
   Bitcoin: { name: 'Bitcoin', ticker: 'BTC', color: '#F7931A', icon: '₿', decimals: 8 },
   Ethereum: { name: 'Ethereum', ticker: 'ETH', color: '#627EEA', icon: 'Ξ', decimals: 18 },
   Solana: { name: 'Solana', ticker: 'SOL', color: '#9945FF', icon: '◎', decimals: 9 },
-  Polygon: { name: 'Polygon', ticker: 'MATIC', color: '#8247E5', icon: '⬡', decimals: 18 },
+  Polygon: { name: 'Polygon', ticker: 'POL', color: '#8247E5', icon: '⬡', decimals: 18 },
   Arbitrum: { name: 'Arbitrum', ticker: 'ETH', color: '#28A0F0', icon: '⟠', decimals: 18 },
   Optimism: { name: 'Optimism', ticker: 'ETH', color: '#FF0420', icon: '⟠', decimals: 18 },
   Avalanche: { name: 'Avalanche', ticker: 'AVAX', color: '#E84142', icon: '△', decimals: 18 },

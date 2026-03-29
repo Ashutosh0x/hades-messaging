@@ -149,6 +149,16 @@
   background: rgba(46, 204, 113, 0.25);
 }
 
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-badge {
+  background: rgba(46, 204, 113, 0.08);
+}
+
 /* ── Search ── */
 .search-container {
   padding: var(--space-3) var(--space-4);

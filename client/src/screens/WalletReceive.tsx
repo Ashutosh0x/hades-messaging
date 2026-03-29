@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useWalletStore } from '../store/walletStore'
-import { CHAIN_META } from '../types/wallet'
+import { CHAIN_META, ChainId } from '../types/wallet'
 import TokenSelector from '../components/TokenSelector'
+import CryptoIcon from '../components/CryptoIcon'
+import { ArrowLeft } from 'lucide-react'
 import './Wallet.css'
 
 export default function WalletReceive() {
@@ -28,7 +30,9 @@ export default function WalletReceive() {
   return (
     <div className="wallet-receive-screen">
       <div className="send-header">
-        <button className="wallet-back-btn" onClick={() => navigate(-1)}>←</button>
+        <button className="wallet-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={18} />
+        </button>
         <h2>Receive {meta.ticker}</h2>
         <div />
       </div>
@@ -37,14 +41,14 @@ export default function WalletReceive() {
         className="chain-selector-btn"
         onClick={() => setShowPicker(true)}
       >
-        <span style={{ color: meta.color }}>{meta.icon}</span>
+        <CryptoIcon chain={selectedChain} size={22} />
         <span>{meta.name}</span>
         <span className="chevron">▾</span>
       </button>
 
       {showPicker && (
         <TokenSelector
-          onSelect={(chain) => {
+          onSelect={(chain: ChainId) => {
             setSelectedChain(chain)
             setShowPicker(false)
           }}
@@ -62,9 +66,7 @@ export default function WalletReceive() {
           className="qr-placeholder"
           style={{ borderColor: meta.color }}
         >
-          <span className="qr-icon" style={{ color: meta.color }}>
-            {meta.icon}
-          </span>
+          <CryptoIcon chain={selectedChain} size={48} />
           <p className="qr-text">QR Code</p>
           <p className="qr-hint">{meta.name} address</p>
         </div>

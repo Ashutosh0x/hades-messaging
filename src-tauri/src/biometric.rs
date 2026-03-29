@@ -16,7 +16,17 @@ pub async fn biometric_available() -> bool {
 
 #[tauri::command]
 pub async fn biometric_authenticate(_reason: String) -> BiometricResult {
-    // On Android, this bridges to BiometricPrompt via JNI
-    // On other platforms, returns success (vault is already unlocked)
-    BiometricResult { authenticated: true, error: None }
+    #[cfg(target_os = "android")]
+    {
+        // On Android, this bridges to BiometricPrompt via JNI
+        BiometricResult { authenticated: true, error: None }
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        // S9 FIX: Non-Android platforms cannot biometric auth — use passphrase instead
+        BiometricResult {
+            authenticated: false,
+            error: Some("Biometric authentication not available on this platform".into()),
+        }
+    }
 }

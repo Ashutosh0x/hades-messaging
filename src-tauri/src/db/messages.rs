@@ -168,3 +168,87 @@ pub fn get_messages_paginated(
 
     Ok(MessagePage { messages, has_more, next_cursor, total_count })
 }
+
+// ─── Pending Messages (for background retry) ─────────────────────
+
+/// Get messages stuck in 'sending' status (older than 30 seconds).
+/// Background sync uses this to re-enqueue them into the message queue.
+pub fn get_pending_messages(conn: &Connection) -> AppResult<Vec<StoredMessage>> {
+    let mut stmt = conn.prepare(
+        r#"SELECT id, conversation_id, sender_id, content_encrypted,
+                  content_nonce, timestamp, status, burn_after, reply_to
+           FROM messages
+           WHERE status = 'sending' AND is_deleted = 0
+             AND datetime(created_at, '+30 seconds') < datetime('now')
+           ORDER BY created_at ASC
+           LIMIT 50"#,
+    )?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(StoredMessage {
+            id: row.get(0)?,
+            conversation_id: row.get(1)?,
+            sender_id: row.get(2)?,
+            content_encrypted: row.get(3)?,
+            content_nonce: row.get(4)?,
+            timestamp: row.get(5)?,
+            status: row.get(6)?,
+            burn_after: row.get(7)?,
+            reply_to: row.get(8)?,
+        })
+    })?;
+
+    Ok(rows.filter_map(|r| r.ok()).collect())
+}
+
+// ─── Burn Conversation ────────────────────────────────────────────
+
+/// Delete all messages in a conversation (WhatsApp "Clear Chat" equivalent).
+/// Also removes FTS index entries and related reactions.
+pub fn burn_conversation(conn: &Connection, conversation_id: &str) -> AppResult<u64> {
+    // 1. Collect message IDs for cascade cleanup
+    let msg_ids: Vec<String> = {
+        let mut stmt = conn.prepare(
+            "SELECT id FROM messages WHERE conversation_id = ?1 AND is_deleted = 0",
+        )?;
+        let rows = stmt.query_map(params![conversation_id], |row| row.get::<_, String>(0))?;
+        rows.filter_map(|r| r.ok()).collect()
+    };
+
+    // 2. Delete FTS entries
+    for msg_id in &msg_ids {
+        let _ = conn.execute(
+            "INSERT INTO messages_fts(messages_fts, message_id, search_tokens) VALUES ('delete', ?1, '')",
+            params![msg_id],
+        );
+    }
+
+    // 3. Delete reactions
+    for msg_id in &msg_ids {
+        let _ = conn.execute(
+            "DELETE FROM message_reactions WHERE message_id = ?1",
+            params![msg_id],
+        );
+    }
+
+    // 4. Delete receipts
+    for msg_id in &msg_ids {
+        let _ = conn.execute(
+            "DELETE FROM message_receipts WHERE message_id = ?1",
+            params![msg_id],
+        );
+    }
+
+    // 5. Securely erase message content then mark deleted
+    let count = conn.execute(
+        r#"UPDATE messages
+           SET is_deleted = 1,
+               content_encrypted = zeroblob(0),
+               content_nonce = zeroblob(0)
+           WHERE conversation_id = ?1 AND is_deleted = 0"#,
+        params![conversation_id],
+    )?;
+
+    Ok(count as u64)
+}
+

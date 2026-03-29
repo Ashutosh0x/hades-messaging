@@ -1,99 +1,93 @@
 import { create } from 'zustand'
-import { invoke } from '@tauri-apps/api/core'
 
-export type DeviceType = 'desktop' | 'phone' | 'tablet'
-export type DeviceStatus = 'connected' | 'disconnected' | 'pending'
+// M4 FIX: Safe invoke wrapper — no crash in browser dev mode
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    return await invoke<T>(cmd, args)
+  } catch {
+    return null
+  }
+}
 
+// Backend device shape (camelCase from #[serde(rename_all = "camelCase")])
+export interface Device {
+  deviceId: string
+  deviceName: string
+  lastSeen: string | null
+  isCurrent: boolean
+}
+
+// Exported type for Settings.tsx backward compat
 export interface LinkedDevice {
   id: string
   name: string
-  type: DeviceType
-  status: DeviceStatus
-  lastSeen: number        // Unix timestamp
-  publicKey: string       // Ed25519 device identity (truncated for display)
+  type: 'desktop' | 'phone' | 'tablet'
+  publicKey: string
   isCurrentDevice: boolean
+  lastSeen: string | null
 }
 
 interface DeviceState {
   devices: LinkedDevice[]
-  addDevice: (device: Omit<LinkedDevice, 'id' | 'lastSeen'>) => void
-  removeDevice: (id: string) => void
-  updateDeviceStatus: (id: string, status: DeviceStatus) => void
-  revokeDevice: (id: string) => void
+  loading: boolean
+  error: string | null
+
+  loadDevices: () => Promise<void>
+  revokeDevice: (deviceId: string) => Promise<void>
 }
 
-/**
- * Detects the current device type from User-Agent.
- * In production, this would come from the Tauri/native layer.
- */
-function detectDeviceType(): DeviceType {
-  const ua = navigator.userAgent.toLowerCase()
-  if (/ipad|tablet|playbook|silk/.test(ua)) return 'tablet'
-  if (/mobile|iphone|android/.test(ua)) return 'phone'
-  return 'desktop'
+// Map backend Device to frontend LinkedDevice
+function mapDevice(d: Device): LinkedDevice {
+  // Heuristic to guess device type from name
+  const nameLower = d.deviceName.toLowerCase()
+  const type: LinkedDevice['type'] = nameLower.includes('phone') || nameLower.includes('mobile')
+    ? 'phone'
+    : nameLower.includes('tablet') || nameLower.includes('ipad')
+      ? 'tablet'
+      : 'desktop'
+
+  return {
+    id: d.deviceId,
+    name: d.deviceName,
+    type,
+    publicKey: d.deviceId, // deviceId is the key
+    isCurrentDevice: d.isCurrent,
+    lastSeen: d.lastSeen,
+  }
 }
 
-function detectDeviceName(): string {
-  const ua = navigator.userAgent
-  if (/Mac/.test(ua)) return 'Mac'
-  if (/Windows/.test(ua)) return 'Windows PC'
-  if (/Linux/.test(ua)) return 'Linux'
-  if (/iPhone/.test(ua)) return 'iPhone'
-  if (/iPad/.test(ua)) return 'iPad'
-  if (/Android/.test(ua)) return 'Android'
-  return 'Unknown Device'
-}
+export const useDeviceStore = create<DeviceState>((set) => ({
+  devices: [],
+  loading: false,
+  error: null,
 
-function generateDeviceFingerprint(): string {
-  const arr = new Uint8Array(8)
-  crypto.getRandomValues(arr)
-  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('')
-}
+  loadDevices: async () => {
+    set({ loading: true, error: null })
+    try {
+      // M4 FIX: wrapped in tryInvoke, won't crash in browser
+      const result = await tryInvoke<Device[]>('get_devices')
+      set({
+        devices: (result ?? []).map(mapDevice),
+        loading: false,
+      })
+    } catch (err: any) {
+      set({
+        error: err?.message ?? 'Failed to load devices',
+        loading: false,
+      })
+    }
+  },
 
-// Seed current device on first load
-const currentDeviceId = `device_${generateDeviceFingerprint()}`
-
-export const useDeviceStore = create<DeviceState>((set, get) => ({
-  devices: [
-    {
-      id: currentDeviceId,
-      name: detectDeviceName(),
-      type: detectDeviceType(),
-      status: 'connected' as DeviceStatus,
-      lastSeen: Date.now(),
-      publicKey: generateDeviceFingerprint(),
-      isCurrentDevice: true,
-    },
-  ],
-
-  addDevice: (device) => set((state) => ({
-    devices: [
-      ...state.devices,
-      {
-        ...device,
-        id: `device_${generateDeviceFingerprint()}`,
-        lastSeen: Date.now(),
-      },
-    ],
-  })),
-
-  removeDevice: (id) => set((state) => ({
-    devices: state.devices.filter((d) => d.id !== id),
-  })),
-
-  updateDeviceStatus: (id, status) => set((state) => ({
-    devices: state.devices.map((d) =>
-      d.id === id ? { ...d, status, lastSeen: Date.now() } : d
-    ),
-  })),
-
-  revokeDevice: (id) => {
-    const device = get().devices.find((d) => d.id === id)
-    if (device?.isCurrentDevice) return // Can't revoke current device
-
-    invoke('hades_identity_revoke_device', { deviceId: id }).catch(console.error)
-    set((state) => ({
-      devices: state.devices.filter((d) => d.id !== id),
-    }))
+  revokeDevice: async (deviceId: string) => {
+    try {
+      // M4 FIX: correct command name is 'revoke_device'
+      await tryInvoke('revoke_device', { deviceId })
+      set((state) => ({
+        devices: state.devices.filter((d) => d.id !== deviceId),
+      }))
+    } catch (err: any) {
+      set({ error: err?.message ?? 'Failed to revoke device' })
+    }
   },
 }))

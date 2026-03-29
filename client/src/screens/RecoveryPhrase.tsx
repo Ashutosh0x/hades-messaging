@@ -7,18 +7,15 @@ import {
   ArrowLeft, ShieldCheck, Copy, Eye, EyeOff, Check, AlertTriangle, Loader,
   ICON_SIZE,
 } from '../ui/icons'
-import { invoke } from '@tauri-apps/api/core'
 import './RecoveryPhrase.css'
 
-type Step = 'display' | 'quiz' | 'confirmed'
+// M10 FIX: Safe invoke wrapper
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  return invoke<T>(cmd, args)
+}
 
-/** Fallback mock words */
-const MOCK_WORDS = [
-  'abandon', 'ability', 'able', 'about', 'above', 'absent',
-  'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident',
-  'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire',
-  'across', 'act', 'action', 'actor', 'actress', 'actual',
-]
+type Step = 'display' | 'quiz' | 'confirmed'
 
 export default function RecoveryPhrase() {
   const navigate = useNavigate()
@@ -29,16 +26,27 @@ export default function RecoveryPhrase() {
   
   const [words, setWords] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    invoke<string[]>('generate_recovery_phrase')
+    // M10 FIX: First check sessionStorage (set during onboarding)
+    const stored = sessionStorage.getItem('hades_mnemonic')
+    if (stored) {
+      setWords(stored.split(' '))
+      setLoading(false)
+      return
+    }
+
+    // Otherwise, try to generate from backend
+    tryInvoke<string[]>('generate_recovery_phrase')
       .then(res => {
         setWords(res)
         setLoading(false)
       })
       .catch(err => {
-        console.error("Failed to generate recovery phrase via Tauri:", err)
-        setWords(MOCK_WORDS)
+        console.error('Failed to generate recovery phrase:', err)
+        // M10 FIX: Show error instead of MOCK_WORDS
+        setError('Could not retrieve recovery phrase. Ensure your vault is unlocked.')
         setLoading(false)
       })
   }, [])
@@ -104,6 +112,11 @@ export default function RecoveryPhrase() {
               {loading ? (
                 <div className="rp-loading">
                   <Loader className="anim-spin" size={32} color="var(--text-secondary)" />
+                </div>
+              ) : error ? (
+                <div className="rp-loading">
+                  <AlertTriangle size={32} color="var(--accent-warning)" />
+                  <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{error}</p>
                 </div>
               ) : (
                 <div className={`rp-word-grid ${!revealed ? 'blurred' : ''}`}>

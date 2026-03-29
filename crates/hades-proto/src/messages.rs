@@ -121,3 +121,44 @@ pub enum ServerPush {
     PrekeyLow { remaining: u32 },
     DeviceEvent { device_id: u32, event_type: String },
 }
+
+// ── Calls ──
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CallMessage {
+    pub id: u64,
+    pub conversation_id: Vec<u8>,
+    pub timestamp: u64,
+    pub start_time: u64,
+    pub end_time: u64,
+    pub call_type: i32,
+    pub direction: i32,
+    pub status: i32,
+    pub duration: i32,
+    pub local_address: String,
+    pub remote_address: String,
+    pub extra_data: Vec<u8>,
+    pub body: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CallSetup {
+    pub ephemeral_key: Vec<u8>,
+    pub call_id: Vec<u8>,
+    pub user_id: Vec<u8>,
+    pub server_config: ServerConfig,
+    pub key_exchange: WireFormat,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub turn_server: String,
+    pub stun_servers: String,
+    pub requires_turn: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WireFormat {
+    pub protocol: i32,
+    pub extra_info: Vec<u8>,
+}

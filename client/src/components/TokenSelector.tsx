@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { CHAIN_META, ChainId } from '../types/wallet'
 import { useWalletStore } from '../store/walletStore'
+import CryptoIcon from './CryptoIcon'
 
 interface TokenSelectorProps {
   onSelect: (chain: ChainId) => void
@@ -40,8 +41,8 @@ export default function TokenSelector({ onSelect, onClose }: TokenSelectorProps)
                 className="chain-option"
                 onClick={() => onSelect(chain)}
               >
-                <span className="chain-icon" style={{ color: meta.color }}>
-                  {meta.icon}
+                <span className="chain-icon-wrap">
+                  <CryptoIcon chain={chain} size={28} />
                 </span>
                 <div className="chain-details">
                   <span className="chain-name">{meta.name}</span>

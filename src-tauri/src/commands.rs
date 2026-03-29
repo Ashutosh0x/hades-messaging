@@ -69,6 +69,7 @@ pub async fn get_safety_number(
 // ─── Key Generation ─────────────────────────────────────────────────
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct X25519KeypairResult {
     pub public_key: String,
     pub secret_key: String,
@@ -86,6 +87,7 @@ pub async fn generate_x25519_keypair() -> AppResult<X25519KeypairResult> {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SignedPrekeyResult {
     pub public_key: String,
     pub signature: String,
@@ -214,6 +216,7 @@ pub async fn has_session(
 // ─── Messages ───────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MessageOut {
     pub id: String,
     pub conversation_id: String,
@@ -285,6 +288,7 @@ pub async fn send_message(
             .send(RelayMessage::Send {
                 recipient_id: contact_id.clone(),
                 envelope: envelope.clone(),
+                message_id: msg_id.clone(),  // S2 FIX: include message_id
             })
             .await?;
     }
@@ -575,20 +579,21 @@ pub async fn restore_from_recovery(
     words: Vec<String>,
     passphrase: String,
 ) -> AppResult<String> {
-    // Validate and derive seed from mnemonic
-    let mnemonic = hades_identity::recovery::Mnemonic::from_words(words)
+    // ── C3 FIX: Derive identity FROM the mnemonic, not a new random one ──
+    let phrase = words.join(" ");
+    let master_seed = MasterSeed::from_mnemonic(&phrase)
         .map_err(|e| AppError::Identity(format!("Invalid recovery phrase: {}", e)))?;
 
-    let _seed = mnemonic.to_seed(&passphrase);
-
-    // Generate a fresh identity using MasterSeed
-    let master_seed = MasterSeed::generate()
+    let messaging_kp = master_seed
+        .derive_messaging_keypair()
         .map_err(|e| AppError::Identity(e.to_string()))?;
-    let messaging_kp = master_seed.derive_messaging_keypair()
-        .map_err(|e| AppError::Identity(e.to_string()))?;
-    let pubkey_hex = hex::encode(messaging_kp.ed25519_public.as_bytes());
+    let pubkey_hex = messaging_kp.hades_id_hex();
 
-    // Open/create database
+    // Derive wallet from same seed
+    let wallet = hades_wallet::hd::HdWallet::from_mnemonic(&phrase)
+        .map_err(|e| AppError::Internal(format!("Wallet derivation failed: {}", e)))?;
+
+    // ── C2 FIX: Use the actual user passphrase, not "temporary_passphrase" ──
     let app_dir = app_handle
         .path()
         .app_data_dir()
@@ -597,18 +602,44 @@ pub async fn restore_from_recovery(
         .map_err(|e| AppError::Internal(format!("Cannot create dir: {}", e)))?;
 
     let db_path = app_dir.join("hades.db");
-    let database = crate::db::Database::open(db_path, "temporary_passphrase")?;
 
-    // Store identity
+    // Remove existing database if present (fresh restore)
+    if db_path.exists() {
+        std::fs::remove_file(&db_path).ok();
+    }
+
+    let database = crate::db::Database::open(db_path, &passphrase)?;
+
+    // Store restored identity
     db::keys::store_identity(
         database.conn(),
         messaging_kp.ed25519_public.as_bytes(),
         &messaging_kp.ed25519_signing.to_bytes(),
     )?;
 
+    // Store mnemonic (encrypted by SQLCipher with the user's passphrase)
+    database.conn().execute(
+        "INSERT OR REPLACE INTO kv_store (key, value) VALUES ('master_mnemonic', ?1)",
+        rusqlite::params![phrase.as_bytes()],
+    )?;
+
+    // Store wallet accounts
+    let wallet_accounts = wallet.derive_all_accounts();
+    for acc in &wallet_accounts {
+        let row = db::wallet::WalletAccountRow {
+            id: 0,
+            chain: format!("{:?}", acc.chain),
+            address: acc.address.clone(),
+            derivation_path: acc.derivation_path.clone(),
+            public_key_hex: acc.public_key_hex.clone(),
+        };
+        db::wallet::insert_account(database.conn(), &row)?;
+    }
+
     let mut s = state.write().await;
     s.db = Some(database);
     s.messaging_keypair = Some(messaging_kp);
+    s.wallet = Some(wallet);
     s.vault_unlocked = true;
 
     Ok(pubkey_hex)
@@ -617,6 +648,7 @@ pub async fn restore_from_recovery(
 // ─── Devices ────────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeviceInfo {
     pub device_id: String,
     pub device_name: String,
@@ -663,6 +695,266 @@ pub async fn revoke_device(
     )?;
 
     Ok(())
+}
+
+// ─── KV Store ───────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn kv_get(state: SharedState, key: String) -> AppResult<Option<String>> {
+    let s = state.read().await;
+    let db = s.db.as_ref().ok_or(AppError::DatabaseLocked)?;
+
+    let result: Option<Vec<u8>> = db.conn()
+        .query_row(
+            "SELECT value FROM kv_store WHERE key = ?1",
+            rusqlite::params![key],
+            |row| row.get(0),
+        )
+        .ok();
+
+    Ok(result.map(|b| String::from_utf8_lossy(&b).to_string()))
+}
+
+#[tauri::command]
+pub async fn kv_set(state: SharedState, key: String, value: String) -> AppResult<()> {
+    let s = state.read().await;
+    let db = s.db.as_ref().ok_or(AppError::DatabaseLocked)?;
+
+    db.conn().execute(
+        "INSERT OR REPLACE INTO kv_store (key, value) VALUES (?1, ?2)",
+        rusqlite::params![key, value.as_bytes()],
+    )?;
+
+    Ok(())
+}
+
+// ─── Search ─────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn search_messages_command(
+    state: SharedState,
+    query: String,
+    limit: Option<i64>,
+) -> AppResult<Vec<crate::search::SearchResult>> {
+    let s = state.read().await;
+    let db = s.db.as_ref().ok_or(AppError::DatabaseLocked)?;
+    crate::search::search_messages(db.conn(), &query, limit.unwrap_or(20))
+}
+
+// ─── Call History ───────────────────────────────────────────────────
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallRecord {
+    pub id: String,
+    pub contact_id: String,
+    pub contact_name: String,
+    pub call_type: String,
+    pub direction: String,
+    pub duration: i64,
+    pub timestamp: String,
+}
+
+#[tauri::command]
+pub async fn get_call_history(state: SharedState) -> AppResult<Vec<CallRecord>> {
+    let s = state.read().await;
+    let db = s.db.as_ref().ok_or(AppError::DatabaseLocked)?;
+
+    let mut stmt = db.conn().prepare(
+        "SELECT id, contact_id, contact_name, call_type, direction, duration, timestamp \
+         FROM call_history ORDER BY timestamp DESC LIMIT 50",
+    )?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(CallRecord {
+            id: row.get(0)?,
+            contact_id: row.get(1)?,
+            contact_name: row.get(2)?,
+            call_type: row.get(3)?,
+            direction: row.get(4)?,
+            duration: row.get(5)?,
+            timestamp: row.get(6)?,
+        })
+    })?;
+
+    Ok(rows.filter_map(|r| r.ok()).collect())
+}
+
+// ─── Conversation Management ────────────────────────────────────────
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BurnResult {
+    pub deleted_count: u64,
+}
+
+#[tauri::command]
+pub async fn burn_conversation(
+    state: SharedState,
+    conversation_id: String,
+) -> AppResult<BurnResult> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+    let count = db::messages::burn_conversation(database.conn(), &conversation_id)?;
+    Ok(BurnResult { deleted_count: count })
+}
+
+#[tauri::command]
+pub async fn save_draft(
+    state: SharedState,
+    conversation_id: String,
+    text: String,
+) -> AppResult<()> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+    database.conn().execute(
+        "INSERT OR REPLACE INTO message_drafts (conversation_id, draft_text, updated_at) VALUES (?1, ?2, datetime('now'))",
+        rusqlite::params![conversation_id, text],
+    )?;
+    Ok(())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DraftResult {
+    pub text: Option<String>,
+}
+
+#[tauri::command]
+pub async fn get_draft(
+    state: SharedState,
+    conversation_id: String,
+) -> AppResult<DraftResult> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+    let text: Option<String> = database.conn()
+        .query_row(
+            "SELECT draft_text FROM message_drafts WHERE conversation_id = ?1",
+            rusqlite::params![conversation_id],
+            |row| row.get(0),
+        )
+        .ok();
+    Ok(DraftResult { text })
+}
+
+#[tauri::command]
+pub async fn toggle_star_message(
+    state: SharedState,
+    message_id: String,
+) -> AppResult<bool> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+
+    let exists: bool = database.conn()
+        .query_row(
+            "SELECT COUNT(*) FROM starred_messages WHERE message_id = ?1",
+            rusqlite::params![&message_id],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0) > 0;
+
+    if exists {
+        database.conn().execute(
+            "DELETE FROM starred_messages WHERE message_id = ?1",
+            rusqlite::params![&message_id],
+        )?;
+        Ok(false) // unstarred
+    } else {
+        database.conn().execute(
+            "INSERT INTO starred_messages (message_id) VALUES (?1)",
+            rusqlite::params![&message_id],
+        )?;
+        Ok(true) // starred
+    }
+}
+
+#[tauri::command]
+pub async fn toggle_pin_conversation(
+    state: SharedState,
+    conversation_id: String,
+) -> AppResult<bool> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+
+    let exists: bool = database.conn()
+        .query_row(
+            "SELECT COUNT(*) FROM pinned_conversations WHERE conversation_id = ?1",
+            rusqlite::params![&conversation_id],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0) > 0;
+
+    if exists {
+        database.conn().execute(
+            "DELETE FROM pinned_conversations WHERE conversation_id = ?1",
+            rusqlite::params![&conversation_id],
+        )?;
+        Ok(false) // unpinned
+    } else {
+        let max_order: i64 = database.conn()
+            .query_row("SELECT COALESCE(MAX(pin_order), 0) FROM pinned_conversations", [], |row| row.get(0))
+            .unwrap_or(0);
+        database.conn().execute(
+            "INSERT INTO pinned_conversations (conversation_id, pin_order) VALUES (?1, ?2)",
+            rusqlite::params![&conversation_id, max_order + 1],
+        )?;
+        Ok(true) // pinned
+    }
+}
+
+#[tauri::command]
+pub async fn toggle_mute_conversation(
+    state: SharedState,
+    conversation_id: String,
+    mute_until: Option<i64>,
+) -> AppResult<bool> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+
+    if let Some(until) = mute_until {
+        database.conn().execute(
+            "INSERT OR REPLACE INTO muted_conversations (conversation_id, muted_until) VALUES (?1, ?2)",
+            rusqlite::params![&conversation_id, until],
+        )?;
+        Ok(true) // muted
+    } else {
+        database.conn().execute(
+            "DELETE FROM muted_conversations WHERE conversation_id = ?1",
+            rusqlite::params![&conversation_id],
+        )?;
+        Ok(false) // unmuted
+    }
+}
+
+#[tauri::command]
+pub async fn toggle_archive_conversation(
+    state: SharedState,
+    conversation_id: String,
+) -> AppResult<bool> {
+    let s = state.read().await;
+    let database = s.db.as_ref().ok_or(AppError::NotInitialized("Database locked".into()))?;
+
+    let exists: bool = database.conn()
+        .query_row(
+            "SELECT COUNT(*) FROM archived_conversations WHERE conversation_id = ?1",
+            rusqlite::params![&conversation_id],
+            |row| row.get::<_, i64>(0),
+        )
+        .unwrap_or(0) > 0;
+
+    if exists {
+        database.conn().execute(
+            "DELETE FROM archived_conversations WHERE conversation_id = ?1",
+            rusqlite::params![&conversation_id],
+        )?;
+        Ok(false) // unarchived
+    } else {
+        database.conn().execute(
+            "INSERT INTO archived_conversations (conversation_id) VALUES (?1)",
+            rusqlite::params![&conversation_id],
+        )?;
+        Ok(true) // archived
+    }
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────

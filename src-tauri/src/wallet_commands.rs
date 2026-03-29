@@ -14,6 +14,7 @@ type SharedState = State<'_, Arc<RwLock<AppState>>>;
 // ─── Types ────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WalletInitResult {
     pub accounts: Vec<AccountInfo>,
     pub mnemonic: Option<String>,
@@ -21,6 +22,7 @@ pub struct WalletInitResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
     pub chain: String,
     pub address: String,
@@ -30,14 +32,17 @@ pub struct AccountInfo {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BalanceResult {
     pub chain: String,
     pub symbol: String,
     pub balance: String,
     pub address: String,
+    pub usd_value: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SendRequest {
     pub chain: String,
     pub to_address: String,
@@ -47,6 +52,7 @@ pub struct SendRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TxResult {
     pub tx_hash: String,
     pub explorer_url: String,
@@ -60,10 +66,28 @@ pub struct TxResult {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GasInfo {
     pub gas_limit: u64,
     pub gas_price_gwei: String,
     pub estimated_fee: String,
+}
+
+// S12/M6 FIX: Three-tier gas estimate matching frontend GasEstimate type
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GasEstimate {
+    pub slow: GasTier,
+    pub standard: GasTier,
+    pub fast: GasTier,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GasTier {
+    pub gas_price_gwei: String,
+    pub estimated_seconds: u32,
+    pub estimated_usd: f64,
 }
 
 // ─── Wallet Init ─────────────────────────────────────────────
@@ -165,7 +189,7 @@ pub async fn wallet_get_balance(state: SharedState, chain: String) -> AppResult<
     let account = accounts.iter().find(|a| a.chain == chain).ok_or(AppError::Internal("No account for chain".into()))?;
     let service = TransactionService::new();
     let balance = service.get_native_balance(chain_enum, &account.address).await.map_err(|e| AppError::Network(e.to_string()))?;
-    Ok(BalanceResult { chain, symbol: chain_enum.ticker().to_string(), balance, address: account.address.clone() })
+    Ok(BalanceResult { chain, symbol: chain_enum.ticker().to_string(), balance, address: account.address.clone(), usd_value: None })
 }
 
 #[tauri::command]
@@ -183,7 +207,7 @@ pub async fn wallet_get_all_balances(state: SharedState) -> AppResult<Vec<Balanc
         };
         balances.push(BalanceResult {
             chain: account.chain.clone(), symbol: chain_enum.ticker().to_string(),
-            balance, address: account.address.clone(),
+            balance, address: account.address.clone(), usd_value: None,
         });
     }
     Ok(balances)
@@ -291,6 +315,68 @@ pub async fn wallet_estimate_fee(_state: SharedState, chain: String, _to: String
         }
         Chain::Solana => Ok(GasInfo { gas_limit: 1, gas_price_gwei: "5000 lamports".into(),
             estimated_fee: "0.000005 SOL".into() }),
+        _ => Err(AppError::Internal("Unsupported chain".into())),
+    }
+}
+
+// S12 FIX: Three-tier gas estimate matching frontend GasEstimate type
+#[tauri::command]
+pub async fn wallet_estimate_gas(_state: SharedState, chain: String, _to: String, _amount: String) -> AppResult<GasEstimate> {
+    let chain_enum = parse_chain(&chain).ok_or(AppError::Internal("Unknown chain".into()))?;
+    let rpc = RpcClient::new();
+    match chain_enum {
+        c if c.is_evm() => {
+            let gas_price = rpc.eth_gas_price(c).await.map_err(|e| AppError::Network(e.to_string()))?;
+            let gas_limit = 21_000u64;
+            let base_gwei = gas_price as f64 / 1e9;
+            let base_fee_eth = (gas_price as f64 * gas_limit as f64) / 1e18;
+            // Approximate USD using a rough ETH price (will be replaced by price service)
+            let eth_usd = 3500.0;
+            Ok(GasEstimate {
+                slow: GasTier {
+                    gas_price_gwei: format!("{:.1}", base_gwei * 0.8),
+                    estimated_seconds: 120,
+                    estimated_usd: base_fee_eth * 0.8 * eth_usd,
+                },
+                standard: GasTier {
+                    gas_price_gwei: format!("{:.1}", base_gwei),
+                    estimated_seconds: 30,
+                    estimated_usd: base_fee_eth * eth_usd,
+                },
+                fast: GasTier {
+                    gas_price_gwei: format!("{:.1}", base_gwei * 1.5),
+                    estimated_seconds: 12,
+                    estimated_usd: base_fee_eth * 1.5 * eth_usd,
+                },
+            })
+        }
+        Chain::Bitcoin => {
+            let fees = rpc.btc_get_fee_estimates().await.map_err(|e| AppError::Network(e.to_string()))?;
+            let vbytes = 140u64;
+            let btc_usd = 68000.0;
+            Ok(GasEstimate {
+                slow: GasTier {
+                    gas_price_gwei: format!("{} sat/vB", fees.slow),
+                    estimated_seconds: 3600,
+                    estimated_usd: (fees.slow * vbytes) as f64 / 1e8 * btc_usd,
+                },
+                standard: GasTier {
+                    gas_price_gwei: format!("{} sat/vB", fees.standard),
+                    estimated_seconds: 600,
+                    estimated_usd: (fees.standard * vbytes) as f64 / 1e8 * btc_usd,
+                },
+                fast: GasTier {
+                    gas_price_gwei: format!("{} sat/vB", fees.fast),
+                    estimated_seconds: 60,
+                    estimated_usd: (fees.fast * vbytes) as f64 / 1e8 * btc_usd,
+                },
+            })
+        }
+        Chain::Solana => Ok(GasEstimate {
+            slow: GasTier { gas_price_gwei: "5000 lamports".into(), estimated_seconds: 5, estimated_usd: 0.001 },
+            standard: GasTier { gas_price_gwei: "5000 lamports".into(), estimated_seconds: 2, estimated_usd: 0.001 },
+            fast: GasTier { gas_price_gwei: "10000 lamports".into(), estimated_seconds: 1, estimated_usd: 0.002 },
+        }),
         _ => Err(AppError::Internal("Unsupported chain".into())),
     }
 }

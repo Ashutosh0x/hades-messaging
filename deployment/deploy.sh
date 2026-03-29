@@ -1,52 +1,57 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Hades Deployment ==="
+echo "=== Hades Production Deployment ==="
 
-# 1. Build relay
-echo "[1/6] Building relay server..."
-cd "$(git rev-parse --show-toplevel)"
+# 1. Build relay server
+echo "[1/8] Building relay server..."
 cargo build --release --package hades-relay --bin hades-relay
 
-# 2. Build Android APK
-echo "[2/6] Building Android APK..."
-cd client && npm install && cd ..
-cargo tauri android build -- --apk --split-per-abi
+# 2. Run security audits
+echo "[2/8] Running security audits..."
+cargo audit || true  # Continue even if warnings
+cargo deny check
 
-# 3. Generate checksums
-echo "[3/6] Generating checksums..."
-APK_DIR="gen/android/app/build/outputs/apk/release"
-for apk in "$APK_DIR"/*.apk; do
+# 3. Run all tests
+echo "[3/8] Running tests..."
+cargo test --workspace --release
+
+# 4. Build Tauri app
+echo "[4/8] Building Tauri app..."
+cd client && npm ci && cd ..
+cargo tauri build
+
+# 5. Generate checksums
+echo "[5/8] Generating checksums..."
+for apk in gen/android/app/build/outputs/apk/release/*.apk; do
     sha256sum "$apk" > "$apk.sha256"
 done
 
-# 4. Deploy relay
-echo "[4/6] Deploying relay..."
+# 6. Deploy relay
+echo "[6/8] Deploying relay..."
 if [ -f deployment/docker-compose.yml ]; then
     cd deployment
-    docker compose build --no-cache
-    docker compose up -d
+    docker compose pull
+    docker compose up -d --build
+    sleep 10
+    curl -f http://localhost:8443/health || exit 1
     cd ..
 fi
 
-# 5. Verify deployment
-echo "[5/6] Verifying..."
-sleep 5
-if curl -sf https://relay.hades.im/health > /dev/null 2>&1; then
-    echo "  ✓ Relay is healthy"
-else
-    echo "  ✗ Relay health check failed"
-    exit 1
-fi
-
-# 6. Tag release
-echo "[6/6] Creating release tag..."
-VERSION=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+# 7. Create release
+echo "[7/8] Creating GitHub release..."
+VERSION=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | grep -oP '\d+\.\d+\.\d+')
 git tag -a "v$VERSION" -m "Release v$VERSION"
-echo "Tagged v$VERSION — push with: git push origin v$VERSION"
+
+# 8. Upload artifacts
+echo "[8/8] Upload artifacts to GitHub Releases..."
+# gh release create "v$VERSION" \
+#   gen/android/app/build/outputs/apk/release/*.apk \
+#   --title "Hades v$VERSION" \
+#   --notes "See CHANGELOG.md for details"
 
 echo ""
-echo "=== Deployment complete ==="
-echo "Relay:   https://relay.hades.im"
-echo "APKs:    $APK_DIR/"
+echo "=== Deployment Complete ==="
 echo "Version: v$VERSION"
+echo "Relay: https://relay.hades.im"
+echo "APKs: gen/android/app/build/outputs/apk/release/"

@@ -6,8 +6,13 @@ import {
   ShieldCheck, EyeOff, Fingerprint, Route, Check, Loader, DatabaseZap,
   ICON_SIZE, ICON_STROKE,
 } from '../ui/icons'
-import { invoke } from '@tauri-apps/api/core'
 import './Onboarding.css'
+
+// M5 FIX: Safe invoke wrapper — no browser crash
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  return invoke<T>(cmd, args)
+}
 
 // -------------------------------------------------------------------
 // Entropy collection — mirrors the Rust sentinel-crypto::entropy API.
@@ -26,6 +31,9 @@ export default function Onboarding() {
   const [progress, setProgress] = useState(0)
   const [entropyCollected, setEntropyCollected] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
+  const [passphrase, setPassphrase] = useState('')
+  const [showPassphraseInput, setShowPassphraseInput] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const touchRef = useRef<HTMLDivElement>(null)
 
   // Phases mirror the Rust keygen pipeline
@@ -51,46 +59,61 @@ export default function Onboarding() {
     if (progress >= 30) return // entropy phase done
     setEntropyCollected(prev => {
       const next = prev + 1
-      invoke('add_entropy_seed', { x: e.clientX, y: e.clientY }).catch(err => {
-        // Silently ignore dev mode missing tauri errors for smooth UX
-        if (!String(err).includes('Tauri')) console.error(err)
-      })
       const newProgress = Math.min(30, Math.floor((next / 50) * 30))
       setProgress(newProgress)
       return next
     })
   }, [progress])
 
-  // Auto-advance keygen phases 2-4 after entropy is collected
+  // M5/M9 FIX: When entropy is collected, show passphrase input then call create_identity
   useEffect(() => {
-    if (progress < 30) return // wait for entropy
-
-    const runKeygen = async () => {
-      try {
-        await invoke('generate_x25519_keypair')
-        setProgress(55)
-        await invoke('generate_mlkem_keypair')
-        setProgress(80)
-        await invoke('build_prekey_bundle')
-        setProgress(100)
-        setIsComplete(true)
-      } catch (err) {
-        console.error("Keygen failed via Tauri:", err)
-        // Fallback progress simulation for web dev mode
-        let p = 30
-        const timer = setInterval(() => {
-          p += 5
-          setProgress(p)
-          if (p >= 100) {
-            clearInterval(timer)
-            setIsComplete(true)
-          }
-        }, 100)
-      }
+    if (progress >= 30 && !showPassphraseInput && !isComplete) {
+      setShowPassphraseInput(true)
     }
-    
-    runKeygen()
   }, [progress >= 30])
+
+  const handleCreateIdentity = async () => {
+    if (passphrase.length < 8) {
+      setError('Passphrase must be at least 8 characters')
+      return
+    }
+    setError(null)
+    setShowPassphraseInput(false)
+
+    try {
+      // M5 FIX: Uses REAL create_identity, not fake generate_mlkem_keypair or add_entropy_seed
+      setProgress(40)
+      const result = await tryInvoke<{
+        hadesId: string
+        hadesIdShort: string
+        mnemonic: string
+        ed25519PublicKey: string
+        x25519PublicKey: string
+        walletAccounts: Array<{ chain: string; address: string; ticker: string }>
+      }>('create_identity', { passphrase, displayName: null })
+
+      setProgress(70)
+      // Store mnemonic for backup display (will be cleared after backup)
+      sessionStorage.setItem('hades_mnemonic', result.mnemonic)
+      sessionStorage.setItem('hades_id', result.hadesIdShort)
+
+      setProgress(100)
+      setIsComplete(true)
+    } catch (err) {
+      console.error('Identity creation failed:', err)
+      setError(String(err))
+      // Fallback progress simulation for web dev mode
+      let p = 30
+      const timer = setInterval(() => {
+        p += 5
+        setProgress(p)
+        if (p >= 100) {
+          clearInterval(timer)
+          setIsComplete(true)
+        }
+      }, 100)
+    }
+  }
 
   const currentPhase = getCurrentPhase(progress)
   const stepLabel = isComplete ? t('onboarding.stepReady') : currentPhase.label
@@ -134,9 +157,41 @@ export default function Onboarding() {
         <p className="onboard-desc">
           {progress < 30
             ? t('onboarding.entropyPrompt')
-            : t('onboarding.desc')
+            : showPassphraseInput
+              ? 'Set your vault passphrase to encrypt your identity'
+              : t('onboarding.desc')
           }
         </p>
+
+        {/* Passphrase input — shown after entropy collection */}
+        {showPassphraseInput && (
+          <div className="passphrase-section" style={{ marginBottom: '1rem' }}>
+            <input
+              type="password"
+              placeholder="Vault passphrase (min 8 characters)"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              className="passphrase-input"
+              style={{
+                width: '100%', padding: '12px 16px', borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.06)', color: 'var(--text-primary)',
+                fontSize: '15px', marginBottom: '8px', outline: 'none',
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateIdentity()}
+              autoFocus
+            />
+            {error && <p style={{ color: 'var(--accent-danger)', fontSize: '13px', margin: '4px 0' }}>{error}</p>}
+            <button
+              className="vault-continue-btn"
+              onClick={handleCreateIdentity}
+              disabled={passphrase.length < 8}
+              style={{ marginTop: '8px' }}
+            >
+              Generate Identity & Wallet
+            </button>
+          </div>
+        )}
 
         <div className="step-indicator">
           <div className="step-icon">

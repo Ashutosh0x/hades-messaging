@@ -80,12 +80,13 @@ export {
   Loader, CheckCircle, Circle, Sparkles, DatabaseZap,
 } from 'lucide-react';
 
-// ── Calling ──
+// ── Calling & Finance ──
 export {
   Phone, PhoneCall, PhoneIncoming, PhoneOutgoing, PhoneMissed, PhoneOff,
   Video, VideoOff, MicOff, Volume2, VolumeX,
   ScreenShare, ScreenShareOff, SwitchCamera, Ghost,
   Pause, Play, Grid2x2,
+  Coins, Wallet,
 } from 'lucide-react';
 
 export type { LucideProps, LucideIcon } from 'lucide-react';

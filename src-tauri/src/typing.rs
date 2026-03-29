@@ -28,9 +28,19 @@ impl TypingManager {
 
         let s = state.read().await;
         if let Some(ref relay) = s.relay {
+            // S4 FIX: Structured control message instead of plaintext b"__TYPING__"
+            let control = serde_json::json!({
+                "type": "typing_indicator",
+                "conversation_id": conversation_id,
+                "timestamp": std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs()
+                    .to_string(),
+            });
             let _ = relay.send(RelayMessage::Send {
                 recipient_id: conversation_id.to_string(),
-                envelope: b"__TYPING__".to_vec(),
+                envelope: control.to_string().as_bytes().to_vec(),
                 message_id: String::new(),
             }).await;
         }

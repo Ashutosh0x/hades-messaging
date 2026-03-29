@@ -25,6 +25,7 @@ pub mod sealed_sender_v2;
 
 pub mod notifications;
 pub mod audio;
+pub mod calls;
 pub mod search;
 pub mod sender_keys;
 

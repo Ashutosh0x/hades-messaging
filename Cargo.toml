@@ -8,6 +8,7 @@ members = [
     "crates/hades-relay",
     "crates/hades-onion",
     "crates/hades-wallet",
+    "crates/hades-media",
     "src-tauri",
 ]
 

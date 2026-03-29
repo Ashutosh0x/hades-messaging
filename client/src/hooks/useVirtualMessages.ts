@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+
+// Safe invoke wrapper — no crash in browser dev mode
+async function tryInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await import('@tauri-apps/api/core');
+  return invoke<T>(cmd, args);
+}
 
 interface MessagePage {
   messages: any[];
@@ -28,7 +33,7 @@ export function useVirtualMessages(conversationId: string, pageSize = 30) {
     setLoading(true);
 
     try {
-      const page = await invoke<MessagePage>('get_messages_paginated', {
+      const page = await tryInvoke<MessagePage>('get_messages_paginated', {
         conversationId,
         cursor: cursorRef.current,
         limit: pageSize,

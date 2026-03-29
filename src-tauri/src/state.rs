@@ -1,4 +1,5 @@
 use crate::db::Database;
+use crate::message_queue::MessageQueue;
 use crate::websocket::RelayConnection;
 use hades_crypto::double_ratchet::RatchetState;
 use hades_identity::seed::MessagingKeypair;
@@ -33,6 +34,9 @@ pub struct AppState {
 
     /// App data directory (resolved from Tauri on setup)
     pub app_data_dir: Option<PathBuf>,
+
+    /// Outbound message queue with priority + retry
+    pub message_queue: MessageQueue,
 }
 
 impl Default for AppState {
@@ -46,6 +50,7 @@ impl Default for AppState {
             vault_unlocked: false,
             display_name: None,
             app_data_dir: None,
+            message_queue: MessageQueue::new(),
         }
     }
 }
@@ -59,3 +64,4 @@ impl Drop for AppState {
         self.vault_unlocked = false;
     }
 }
+

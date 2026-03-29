@@ -1,4 +1,5 @@
 import { CHAIN_META, ChainId } from '../types/wallet'
+import CryptoIcon from './CryptoIcon'
 
 interface ChainBadgeProps {
   chain: ChainId
@@ -8,6 +9,7 @@ interface ChainBadgeProps {
 export default function ChainBadge({ chain, size = 'md' }: ChainBadgeProps) {
   const meta = CHAIN_META[chain]
   const sizeClass = `chain-badge chain-badge-${size}`
+  const iconSize = size === 'sm' ? 12 : size === 'md' ? 16 : 20
 
   return (
     <span
@@ -18,7 +20,7 @@ export default function ChainBadge({ chain, size = 'md' }: ChainBadgeProps) {
         borderColor: meta.color + '30',
       }}
     >
-      {meta.icon} {meta.ticker}
+      <CryptoIcon chain={chain} size={iconSize} /> {meta.ticker}
     </span>
   )
 }

@@ -1,0 +1,28 @@
+[package]
+name = "hades-media"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Image processing
+image = { version = "0.25", features = ["jpeg", "png", "webp"] }
+img-parts = "0.3"
+
+# Video processing (FFmpeg wrapper)
+ffmpeg-sidecar = "1"
+
+# Crypto
+hades-crypto = { path = "../hades-crypto" }
+
+# Utilities
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+thiserror = "1"
+log = "0.4"
+rand = "0.8"
+uuid = { version = "1", features = ["v4"] }
+
+# File handling
+tempfile = "3"
+sha2 = "0.10"

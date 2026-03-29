@@ -20,6 +20,8 @@ hades-relay = { path = "../crates/hades-relay" }
 hades-proto = { path = "../crates/hades-proto" }
 hades-common = { path = "../crates/hades-common" }
 hades-wallet = { path = "../crates/hades-wallet" }
+hades-media = { path = "../crates/hades-media" }
+
 
 # Database
 rusqlite = { version = "0.31", features = ["bundled-sqlcipher", "vtab"] }

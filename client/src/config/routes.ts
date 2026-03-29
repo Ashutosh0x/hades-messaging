@@ -18,6 +18,12 @@ export const ROUTES = {
   CONTACTS: '/contacts',
   ADD_CONTACT: '/add-contact',
   RECOVERY_PHRASE: '/recovery-phrase',
+
+  // Wallet
+  WALLET: '/wallet',
+  WALLET_SEND: '/wallet/send',
+  WALLET_RECEIVE: '/wallet/receive',
+  WALLET_HISTORY: '/wallet/history',
 } as const
 
 /** Build a route by replacing :param placeholders */
