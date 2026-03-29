@@ -6,11 +6,11 @@ https://github.com/user-attachments/assets/8b952b10-7954-4d8a-87a0-78d3c0c8c174
 
 <p align="center">
   <a href="https://play.google.com/store/apps/details?id=im.hades.messaging">
-    <img src="docs/assets/google-play-badge.png" alt="Get it on Google Play" height="56">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="60">
   </a>
   &nbsp;&nbsp;
   <a href="https://apps.apple.com/app/hades-messaging/idYOUR_APP_ID">
-    <img src="docs/assets/app-store-badge.png" alt="Download on the App Store" height="56">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="40">
   </a>
 </p>
 
