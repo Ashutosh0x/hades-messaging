@@ -32,7 +32,7 @@ ml-kem = "0.2"
 zeroize = { version = "1", features = ["derive"] }
 subtle = "2"
 rand = "0.8"
-getrandom = "0.2"
+getrandom = "0.4"
 argon2 = "0.5"
 
 # Async runtime
