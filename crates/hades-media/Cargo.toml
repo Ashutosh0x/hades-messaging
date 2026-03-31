@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 # Image processing
 image = { version = "0.25", features = ["jpeg", "png", "webp"] }
-img-parts = "0.3"
+img-parts = "0.4"
 
 # Video processing (FFmpeg wrapper)
 ffmpeg-sidecar = "1"
