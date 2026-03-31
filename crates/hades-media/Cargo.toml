@@ -9,7 +9,7 @@ image = { version = "0.25", features = ["jpeg", "png", "webp"] }
 img-parts = "0.3"
 
 # Video processing (FFmpeg wrapper)
-ffmpeg-sidecar = "1"
+ffmpeg-sidecar = "2"
 
 # Crypto
 hades-crypto = { path = "../hades-crypto" }
