@@ -27,7 +27,7 @@ jobs:
     name: Filesystem Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run Trivy (filesystem)
         uses: aquasecurity/trivy-action@master
@@ -49,7 +49,7 @@ jobs:
     name: Config Scan (IaC)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run Trivy (config)
         uses: aquasecurity/trivy-action@master
