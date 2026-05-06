@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/api": "^2.11.0",
     "date-fns": "^4.1.0",
     "events": "^3.3.0",
     "framer-motion": "^12.38.0",
